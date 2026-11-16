@@ -1,0 +1,3315 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChronoGrist - Pointage Individuel & Gestion des Congés</title>
+  <style>
+    /* ==========================================================================
+       1. DESIGN TOKENS & THÈMES (CLAIR / SOMBRE) — 100% CSS AUTONOME
+       ========================================================================== */
+    :root {
+      --bg-app: #f1f5f9;
+      --bg-surface: #ffffff;
+      --bg-surface-alt: #f8fafc;
+      --bg-hover: #f1f5f9;
+      --bg-input: #ffffff;
+      --border-color: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --accent-primary: #2563eb;
+      --accent-primary-hover: #1d4ed8;
+      --accent-soft: #eff6ff;
+      --accent-border: #bfdbfe;
+      --success-bg: #ecfdf5;
+      --success-text: #047857;
+      --success-border: #a7f3d0;
+      --warning-bg: #fffbeb;
+      --warning-text: #b45309;
+      --warning-border: #fde68a;
+      --danger-bg: #fef2f2;
+      --danger-text: #b91c1c;
+      --danger-border: #fecaca;
+      --purple-bg: #f5f3ff;
+      --purple-text: #6d28d9;
+      --purple-border: #ddd6fe;
+      --j28-bg: #fef3c7;
+      --j28-border: #f59e0b;
+      --weekend-bg: #f8fafc;
+      --holiday-bg: #fff1f2;
+      --today-bg: #eff6ff;
+      --week-row-bg: #e2e8f0;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg-app: #090d16;
+      --bg-surface: #111827;
+      --bg-surface-alt: #1e293b;
+      --bg-hover: #1e293b;
+      --bg-input: #0f172a;
+      --border-color: #1f2937;
+      --border-strong: #334155;
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #64748b;
+      --accent-primary: #3b82f6;
+      --accent-primary-hover: #60a5fa;
+      --accent-soft: rgba(59, 130, 246, 0.15);
+      --accent-border: rgba(59, 130, 246, 0.35);
+      --success-bg: rgba(16, 185, 129, 0.14);
+      --success-text: #34d399;
+      --success-border: rgba(16, 185, 129, 0.35);
+      --warning-bg: rgba(245, 158, 11, 0.14);
+      --warning-text: #fbbf24;
+      --warning-border: rgba(245, 158, 11, 0.35);
+      --danger-bg: rgba(239, 68, 68, 0.14);
+      --danger-text: #f87171;
+      --danger-border: rgba(239, 68, 68, 0.35);
+      --purple-bg: rgba(139, 92, 246, 0.18);
+      --purple-text: #c4b5fd;
+      --purple-border: rgba(139, 92, 246, 0.4);
+      --j28-bg: rgba(245, 158, 11, 0.22);
+      --j28-border: #d97706;
+      --weekend-bg: #0d1320;
+      --holiday-bg: rgba(225, 29, 72, 0.12);
+      --today-bg: rgba(37, 99, 235, 0.18);
+      --week-row-bg: #1e293b;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.5);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      line-height: 1.45;
+      font-size: 14px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .mono {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ==========================================================================
+       2. BARRE SUPÉRIEURE & NAVIGATION PAR ONGLETS
+       ========================================================================== */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background-color: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: 0.65rem 1rem;
+    }
+
+    .header-inner {
+      max-width: 1640px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      box-shadow: 0 3px 10px rgba(37, 99, 235, 0.25);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-sub {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: var(--success-bg);
+      color: var(--success-text);
+      border: 1px solid var(--success-border);
+    }
+
+    .status-pill.grist {
+      background: var(--accent-soft);
+      color: var(--accent-primary);
+      border-color: var(--accent-border);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .nav-tabs {
+      display: flex;
+      align-items: center;
+      background: var(--bg-surface-alt);
+      border: 1px solid var(--border-color);
+      padding: 4px;
+      border-radius: 12px;
+      gap: 4px;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    .tab-btn {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+
+    .tab-btn.active {
+      background: var(--bg-surface);
+      color: var(--accent-primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tab-badge {
+      padding: 1px 6px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      background: var(--accent-soft);
+      color: var(--accent-primary);
+      font-weight: 700;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ==========================================================================
+       3. COMPOSANTS COMMUNS (BOUTONS, CARTES, FORMULAIRES, BADGES)
+       ========================================================================== */
+    .main-container {
+      max-width: 1640px;
+      margin: 0 auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .tab-panel {
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+      animation: fadeIn 0.18s ease-out;
+    }
+
+    .tab-panel.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.15rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.85rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .card-desc {
+      font-size: 0.76rem;
+      color: var(--text-secondary);
+      margin: 2px 0 0 0;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.45rem 0.8rem;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: var(--bg-hover);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-primary-hover);
+      border-color: var(--accent-primary-hover);
+    }
+
+    .btn-success {
+      background: #059669;
+      border-color: #059669;
+      color: #ffffff;
+    }
+
+    .btn-success:hover {
+      background: #047857;
+    }
+
+    .btn-warning {
+      background: #d97706;
+      border-color: #d97706;
+      color: #ffffff;
+    }
+
+    .btn-danger {
+      background: var(--danger-bg);
+      border-color: var(--danger-border);
+      color: var(--danger-text);
+    }
+
+    .btn-sm {
+      padding: 0.3rem 0.55rem;
+      font-size: 0.74rem;
+      border-radius: 6px;
+    }
+
+    .input, .select {
+      font-family: inherit;
+      font-size: 0.82rem;
+      color: var(--text-primary);
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 0.42rem 0.65rem;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .input:focus, .select:focus {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .input-sm, .select-sm {
+      font-size: 0.78rem;
+      padding: 0.25rem 0.4rem;
+      border-radius: 6px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+      gap: 0.85rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .form-hint {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    /* ==========================================================================
+       4. ONGLET 1 : HORLOGE, HORODATAGE RAPIDE & CARTES KPI
+       ========================================================================== */
+    .top-dashboard-grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 1024px) {
+      .top-dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .clock-card {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #1e3a8a 100%);
+      color: #ffffff;
+      border-radius: var(--radius-lg);
+      padding: 1.15rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: var(--shadow-md);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .clock-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .clock-time {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-top: 4px;
+    }
+
+    .clock-date {
+      font-size: 0.84rem;
+      color: #cbd5e1;
+      text-transform: capitalize;
+      margin-top: 4px;
+    }
+
+    .clock-badges {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 5px;
+    }
+
+    .clock-badge {
+      padding: 3px 9px;
+      border-radius: 7px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.12);
+      color: #e0f2fe;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .clock-controls {
+      margin-top: 0.9rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .clock-controls select, .clock-controls button {
+      background: rgba(15, 23, 42, 0.75);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 7px;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .clock-controls button:hover {
+      background: rgba(37, 99, 235, 0.8);
+    }
+
+    .punch-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.65rem;
+    }
+
+    @media (max-width: 640px) {
+      .punch-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .punch-btn {
+      appearance: none;
+      border: none;
+      border-radius: 12px;
+      padding: 0.75rem 0.85rem;
+      color: #ffffff;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.12s ease, filter 0.15s ease;
+    }
+
+    .punch-btn:hover {
+      filter: brightness(1.06);
+    }
+
+    .punch-btn:active {
+      transform: scale(0.97);
+    }
+
+    .punch-btn.am-in  { background: linear-gradient(135deg, #059669, #0d9488); }
+    .punch-btn.am-out { background: linear-gradient(135deg, #d97706, #ea580c); }
+    .punch-btn.pm-in  { background: linear-gradient(135deg, #2563eb, #4f46e5); }
+    .punch-btn.pm-out { background: linear-gradient(135deg, #7c3aed, #9333ea); }
+
+    .punch-btn-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.9;
+      font-weight: 700;
+    }
+
+    .punch-btn-label {
+      font-size: 0.9rem;
+      font-weight: 800;
+      margin: 4px 0;
+    }
+
+    .punch-btn-val {
+      font-size: 0.76rem;
+      opacity: 0.92;
+    }
+
+    .quick-leave-bar {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    @media (max-width: 1100px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .kpi-value {
+      font-size: 1.65rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin: 4px 0;
+    }
+
+    .soldes-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 600px) {
+      .soldes-mini-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .solde-box {
+      background: var(--bg-surface-alt);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 6px 4px;
+      text-align: center;
+    }
+
+    .solde-box-code {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .solde-box-val {
+      font-size: 0.86rem;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+
+    /* ==========================================================================
+       5. TABLEAU JOURNALIER DE POINTAGE
+       ========================================================================== */
+    .table-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.65rem;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--bg-surface-alt);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+
+    .legend-items {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.74rem;
+      color: var(--text-secondary);
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 11px;
+      height: 11px;
+      border-radius: 3px;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table.ts-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.79rem;
+    }
+
+    table.ts-table th {
+      background: var(--bg-surface-alt);
+      color: var(--text-secondary);
+      font-size: 0.69rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.6rem 0.45rem;
+      border-bottom: 1px solid var(--border-strong);
+      white-space: nowrap;
+      text-align: left;
+    }
+
+    table.ts-table td {
+      padding: 0.42rem 0.45rem;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+
+    table.ts-table tr.day-row {
+      transition: background-color 0.1s ease;
+    }
+
+    table.ts-table tr.day-row:hover {
+      background-color: var(--bg-hover);
+    }
+
+    table.ts-table tr.is-weekend {
+      background-color: var(--weekend-bg);
+      color: var(--text-muted);
+    }
+
+    table.ts-table tr.is-holiday {
+      background-color: var(--holiday-bg);
+    }
+
+    table.ts-table tr.is-today {
+      background-color: var(--today-bg);
+    }
+
+    table.ts-table tr.is-selected {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: -2px;
+    }
+
+    table.ts-table tr.is-j28 {
+      background-color: var(--j28-bg) !important;
+      border-top: 2px solid var(--j28-border);
+      border-bottom: 2px solid var(--j28-border);
+    }
+
+    table.ts-table tr.week-summary-row {
+      background-color: var(--week-row-bg);
+      font-weight: 700;
+      font-size: 0.76rem;
+    }
+
+    table.ts-table tr.week-summary-row td {
+      padding: 0.45rem 0.65rem;
+      border-bottom: 2px solid var(--border-strong);
+    }
+
+    .sticky-col {
+      position: sticky;
+      left: 0;
+      z-index: 5;
+      background: inherit;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .badge-holiday { background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); }
+    .badge-vac     { background: var(--accent-soft); color: var(--accent-primary); border: 1px solid var(--accent-border); }
+    .badge-p28     { background: var(--bg-surface-alt); color: var(--text-secondary); border: 1px solid var(--border-strong); }
+    .badge-j28     { background: #f59e0b; color: #ffffff; font-weight: 800; }
+    .badge-rcb     { background: var(--purple-bg); color: var(--purple-text); border: 1px solid var(--purple-border); }
+    .badge-fc      { background: var(--warning-bg); color: var(--warning-text); border: 1px solid var(--warning-border); }
+
+    .text-pos { color: var(--success-text); font-weight: 700; }
+    .text-neg { color: var(--danger-text); font-weight: 700; }
+    .text-neutral { color: var(--text-secondary); }
+    .text-right { text-align: right !important; }
+    .text-center { text-align: center !important; }
+
+    /* ==========================================================================
+       6. ONGLET TIMER (ANNEAU DE PROGRESSION SVG)
+       ========================================================================== */
+    .timer-wrapper {
+      max-width: 540px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .timer-ring-box {
+      position: relative;
+      width: 240px;
+      height: 240px;
+      margin: 1rem auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .timer-ring-box svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .timer-ring-bg {
+      stroke: var(--border-color);
+      fill: transparent;
+    }
+
+    .timer-ring-fg {
+      stroke: var(--accent-primary);
+      fill: transparent;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.25s linear;
+    }
+
+    .timer-center-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .timer-digits {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .timer-inputs-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      max-width: 340px;
+      margin: 0 auto 1rem auto;
+    }
+
+    .timer-input-box {
+      background: var(--bg-surface-alt);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.5rem;
+    }
+
+    .timer-input-box input {
+      width: 100%;
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: 800;
+      border: none;
+      background: transparent;
+      color: var(--text-primary);
+      outline: none;
+    }
+
+    /* ==========================================================================
+       7. TOASTS & NOTIFICATIONS NON BLOQUANTES
+       ========================================================================== */
+    .toast-container {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-width: 380px;
+      pointer-events: none;
+    }
+
+    .toast {
+      pointer-events: auto;
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      border: 1px solid var(--border-strong);
+      border-left: 4px solid var(--accent-primary);
+      border-radius: 10px;
+      padding: 0.65rem 0.95rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      box-shadow: var(--shadow-md);
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .toast.success { border-left-color: #10b981; }
+    .toast.warning { border-left-color: #f59e0b; }
+    .toast.error   { border-left-color: #ef4444; }
+
+    .two-col-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 960px) {
+      .two-col-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: var(--border-color);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 6px 0;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f59e0b, #ea580c);
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- EN-TÊTE PRINCIPAL & NAVIGATION -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">⏱</div>
+        <div>
+          <h1 class="brand-title">ChronoGrist — Pointage &amp; Congés</h1>
+          <div class="brand-sub">
+            <span id="grist-status-pill" class="status-pill">
+              <span class="status-dot"></span>
+              <span id="grist-status-text">Mode Autonome (LocalStorage)</span>
+            </span>
+            <span id="active-year-indicator" class="mono">Année 2026</span>
+          </div>
+        </div>
+      </div>
+
+      <nav class="nav-tabs" role="tablist" aria-label="Navigation principale">
+        <button type="button" class="tab-btn active" data-tab="pointages" role="tab" aria-selected="true">
+          📅 Pointages
+        </button>
+        <button type="button" class="tab-btn" data-tab="previsions" role="tab" aria-selected="false">
+          🏖️ Prévisions Congés <span id="badge-forecast-count" class="tab-badge">0</span>
+        </button>
+        <button type="button" class="tab-btn" data-tab="timer" role="tab" aria-selected="false">
+          ⏳ Timer <span id="badge-timer-mini" class="tab-badge" style="display:none;">00:00</span>
+        </button>
+        <button type="button" class="tab-btn" data-tab="configuration" role="tab" aria-selected="false">
+          ⚙️ Configuration
+        </button>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" id="btn-grist-sync-header" class="btn btn-primary btn-sm" style="display:none;">
+          🔄 Synchroniser / Créer tables Grist
+        </button>
+        <button type="button" id="btn-theme-toggle" class="btn btn-sm" title="Basculer Thème Clair / Sombre">
+          <span id="theme-icon">🌙</span> <span id="theme-label">Thème Sombre</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENU PRINCIPAL -->
+  <main class="main-container">
+
+    <!-- ====================================================================
+         ONGLET 1 : POINTAGES
+         ==================================================================== -->
+    <section id="panel-pointages" class="tab-panel active" role="tabpanel">
+
+      <!-- Bandeau supérieur : Horloge Temps Réel + Boutons d'Horodatage -->
+      <div class="top-dashboard-grid">
+        <!-- Horloge Numérique & Navigation Mois -->
+        <div class="clock-card">
+          <div class="clock-top">
+            <div>
+              <div style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:#93c5fd; font-weight:700;">
+                Horloge Système Temps Réel
+              </div>
+              <div id="live-clock-time" class="clock-time mono">00:00:00</div>
+              <div id="live-clock-date" class="clock-date">Chargement...</div>
+            </div>
+            <div class="clock-badges">
+              <span id="live-iso-week" class="clock-badge mono">Semaine S--</span>
+              <span id="live-p28-badge" class="clock-badge">P-- • Jour --/28</span>
+            </div>
+          </div>
+
+          <div class="clock-controls">
+            <div style="display:flex; align-items:center; gap:5px;">
+              <button type="button" id="btn-prev-month" title="Mois précédent">◀</button>
+              <select id="select-month" aria-label="Sélectionner le mois">
+                <option value="0">Janvier</option>
+                <option value="1">Février</option>
+                <option value="2">Mars</option>
+                <option value="3">Avril</option>
+                <option value="4">Mai</option>
+                <option value="5">Juin</option>
+                <option value="6">Juillet</option>
+                <option value="7">Août</option>
+                <option value="8">Septembre</option>
+                <option value="9">Octobre</option>
+                <option value="10">Novembre</option>
+                <option value="11">Décembre</option>
+              </select>
+              <select id="select-year-quick" aria-label="Sélectionner l'année"></select>
+              <button type="button" id="btn-next-month" title="Mois suivant">▶</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:5px;">
+              <select id="select-day-filter" aria-label="Filtrer les jours">
+                <option value="all">Tous les jours</option>
+                <option value="workdays">Jours ouvrés</option>
+              </select>
+              <button type="button" id="btn-go-today">Aujourd'hui</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Boutons d'Horodatage Instantané & Sélecteur Rapide de Congé -->
+        <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+          <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:0.5rem; margin-bottom:0.65rem;">
+            <div>
+              <h2 class="card-title">⚡ Horodatage Instantané (Heure Système)</h2>
+              <p class="card-desc">Cliquez sur une ligne du tableau pour changer la journée active, puis pointez en un clic.</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <label for="target-date-input" class="form-label">Journée active :</label>
+              <input type="date" id="target-date-input" class="input input-sm mono" />
+            </div>
+          </div>
+
+          <div class="punch-grid" id="quick-punch-buttons">
+            <button type="button" class="punch-btn am-in" data-punch="inAM">
+              <div class="punch-btn-top"><span>Matin</span><span>🌅</span></div>
+              <div class="punch-btn-label">Entrée Matin</div>
+              <div id="qp-val-inAM" class="punch-btn-val mono">Actuel : --:--</div>
+            </button>
+            <button type="button" class="punch-btn am-out" data-punch="outAM">
+              <div class="punch-btn-top"><span>Midi</span><span>🍽️</span></div>
+              <div class="punch-btn-label">Sortie Matin</div>
+              <div id="qp-val-outAM" class="punch-btn-val mono">Actuel : --:--</div>
+            </button>
+            <button type="button" class="punch-btn pm-in" data-punch="inPM">
+              <div class="punch-btn-top"><span>Après-midi</span><span>☀️</span></div>
+              <div class="punch-btn-label">Entrée Après-midi</div>
+              <div id="qp-val-inPM" class="punch-btn-val mono">Actuel : --:--</div>
+            </button>
+            <button type="button" class="punch-btn pm-out" data-punch="outPM">
+              <div class="punch-btn-top"><span>Soir</span><span>🌆</span></div>
+              <div class="punch-btn-label">Sortie Après-midi</div>
+              <div id="qp-val-outPM" class="punch-btn-val mono">Actuel : --:--</div>
+            </button>
+          </div>
+
+          <div class="quick-leave-bar">
+            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px;">
+              <span class="form-label">Poser un congé / événement sur la journée active :</span>
+              <select id="quick-leave-type" class="select select-sm"></select>
+              <select id="quick-leave-scope" class="select select-sm">
+                <option value="FULL">Journée entière (08:06)</option>
+                <option value="AM">Matin 1/2 (04:03)</option>
+                <option value="PM">Après-midi 1/2 (04:03)</option>
+                <option value="CLEAR">Effacer congé</option>
+              </select>
+              <button type="button" id="btn-apply-quick-leave" class="btn btn-primary btn-sm">Appliquer</button>
+            </div>
+            <span id="quick-day-calc-preview" class="mono" style="font-size:0.75rem; color:var(--text-secondary);">
+              Reprise repas : --:-- | Départ prévu : --:--
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 Cartes de Synthèse en Temps Réel -->
+      <div class="kpi-grid">
+        <!-- Carte 1 : Soldes restants -->
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="form-label" style="text-transform:uppercase;">Soldes Congés &amp; Repos Restants</span>
+            <span id="kpi-hp-bonus-badge" class="badge badge-fc">Bonus HP : +0j</span>
+          </div>
+          <div class="soldes-mini-grid" id="kpi-soldes-grid">
+            <!-- Rempli dynamiquement -->
+          </div>
+        </div>
+
+        <!-- Carte 2 : Cumul d'heures annuel -->
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="form-label" style="text-transform:uppercase;">Cumul d'Heures Annuel Actuel</span>
+            <span class="badge badge-vac mono">Σ Continu</span>
+          </div>
+          <div id="kpi-annual-cumul" class="kpi-value mono text-pos">+00:00</div>
+          <div id="kpi-annual-cumul-detail" class="form-hint">
+            Inclut Reliquat N-1 (+00:00) + Reliquat CA N-1 (+00:00)
+          </div>
+        </div>
+
+        <!-- Carte 3 : Bilan de la vingt-huitaine en cours -->
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span id="kpi-p28-title" class="form-label" style="text-transform:uppercase;">Vingt-huitaine Active (P1)</span>
+            <span id="kpi-p28-thresholds" class="form-hint mono">1/10e: 04:03 • 1/5e: 08:06</span>
+          </div>
+          <div style="display:flex; align-items:baseline; justify-content:space-between; gap:8px;">
+            <div id="kpi-p28-balance" class="kpi-value mono">+00:00</div>
+            <span id="kpi-p28-dates" class="form-hint mono">Du --/-- au --/--</span>
+          </div>
+          <div id="kpi-p28-rule" style="font-size:0.75rem; font-weight:600; color:var(--text-secondary);">
+            Solde équilibré.
+          </div>
+        </div>
+      </div>
+
+      <!-- Tableau Journalier Complet du Mois -->
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div class="table-toolbar">
+          <div class="legend-items">
+            <strong>Légende :</strong>
+            <span><span class="legend-dot" style="background:var(--today-bg); border:1px solid var(--accent-primary);"></span>Aujourd'hui</span>
+            <span><span class="legend-dot" style="background:var(--j28-bg); border:1px solid var(--j28-border);"></span><strong>28e jour (Fin vingt-huitaine)</strong></span>
+            <span><span class="legend-dot" style="background:var(--holiday-bg); border:1px solid var(--danger-border);"></span>Jour férié</span>
+            <span><span class="badge badge-vac">🎒 Vacances</span> Zone <span id="legend-zone-label">C</span></span>
+            <span><span class="badge badge-rcb">⚡ RCB</span> Affiché uniquement le jour posé (-04:03 cumul)</span>
+          </div>
+          <div class="mono" style="font-size:0.74rem; color:var(--text-secondary);">
+            Journée : <strong id="legend-day-ref">08:06</strong> | Demi-journée : <strong id="legend-half-ref">04:03</strong> | Pause : <strong id="legend-meal-ref">00:45</strong>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="ts-table">
+            <thead>
+              <tr>
+                <th class="sticky-col">Date &amp; Jour</th>
+                <th>Calendrier / 28j</th>
+                <th class="text-center">Prévision</th>
+                <th class="text-center">Entrée Matin</th>
+                <th class="text-center">Sortie Matin</th>
+                <th class="text-center" title="Sortie Matin + Durée pause repas">Reprise Repas</th>
+                <th class="text-center">Entrée AM</th>
+                <th class="text-center">Sortie AM</th>
+                <th class="text-center" title="Formule exacte en fractions de jour">Départ Prévu</th>
+                <th>Congé / Évén. Matin</th>
+                <th>Congé / Évén. AM</th>
+                <th class="text-right">Total Jour</th>
+                <th class="text-right" title="Total Jour - Durée Journée">Reliquat Jour</th>
+                <th class="text-right" title="Reliquat Jour + Cumul Précédent (- 04:03 si RCB)">Cumul Heures</th>
+              </tr>
+            </thead>
+            <tbody id="timesheet-tbody">
+              <!-- Lignes générées dynamiquement -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Panneau Récapitulatif des Périodes de 28 Jours (Vingt-huitaines) de l'Année -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title">🔄 Récapitulatif Annuel des Périodes de 28 Jours (Vingt-huitaines &amp; Règles RCB)</h3>
+            <p class="card-desc">Suivi automatique des crédits (report &lt; 1/10e, droit à 1/2j RCB de 04h03 + report du surplus si &gt; 1/10e) et débits (compensation ou décompte A.R.T.T.).</p>
+          </div>
+          <span id="p28-summary-thresholds" class="badge badge-vac mono">1/10e = 04:03 | 1/5e = 08:06</span>
+        </div>
+        <div class="table-wrapper">
+          <table class="ts-table">
+            <thead>
+              <tr>
+                <th>Période</th>
+                <th>Date Début (J1)</th>
+                <th>Date Clôture (J28)</th>
+                <th class="text-right">Solde Période</th>
+                <th class="text-center">RCB Posés</th>
+                <th>Statut Réglementaire Automatique (RCB / A.R.T.T.)</th>
+              </tr>
+            </thead>
+            <tbody id="p28-annual-tbody">
+              <!-- Rempli dynamiquement -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ONGLET 2 : PRÉVISIONS CONGÉS
+         ==================================================================== -->
+    <section id="panel-previsions" class="tab-panel" role="tabpanel">
+      <div class="two-col-grid">
+        <!-- Formulaire d'ajout de prévision -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">📅 Ajouter une Prévision de Congés</h2>
+              <p class="card-desc">Un icône indicatif apparaîtra automatiquement sur chaque jour correspondant dans l'onglet Pointages.</p>
+            </div>
+          </div>
+
+          <form id="forecast-form" style="display:flex; flex-direction:column; gap:0.85rem;">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="fc-type">Type de congé / repos</label>
+                <select id="fc-type" class="select"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="fc-part">Période / Durée</label>
+                <select id="fc-part" class="select">
+                  <option value="FULL">Journée entière (1,0 j)</option>
+                  <option value="AM">Matin 1/2 (0,5 j)</option>
+                  <option value="PM">Après-midi 1/2 (0,5 j)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="fc-start">Date de début</label>
+                <input type="date" id="fc-start" class="input mono" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="fc-end">Date de fin (incluse)</label>
+                <input type="date" id="fc-end" class="input mono" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="fc-comment">Commentaire (optionnel)</label>
+              <input type="text" id="fc-comment" class="input" placeholder="Ex: Vacances d'été, Pont de mai..." />
+            </div>
+
+            <label style="display:flex; align-items:center; gap:8px; font-size:0.78rem; color:var(--text-secondary); cursor:pointer;">
+              <input type="checkbox" id="fc-skip-nonworking" checked />
+              Ignorer automatiquement les week-ends et jours fériés
+            </label>
+
+            <button type="submit" class="btn btn-primary">+ Enregistrer la prévision</button>
+          </form>
+        </div>
+
+        <!-- Encart Calcul Automatique des Hors Période (HP) & Tableau Comparatif -->
+        <div style="display:flex; flex-direction:column; gap:1rem;">
+          <div class="card" style="background:var(--warning-bg); border-color:var(--warning-border);">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.75rem;">
+              <div>
+                <h3 class="card-title" style="color:var(--warning-text);">🍂 Calcul Automatique des Hors Période (HP)</h3>
+                <p style="font-size:0.76rem; color:var(--text-primary); margin:4px 0 0 0;">
+                  Comptabilise les jours de <strong>CA</strong> pris et/ou prévus en dehors du <strong>1er mai au 31 octobre</strong> :<br />
+                  • <strong>5, 6 ou 7 jours</strong> hors période = <strong>+1 jour HP</strong> supplémentaire<br />
+                  • <strong>8 jours ou plus</strong> hors période = <strong>+2 jours HP</strong> supplémentaires
+                </p>
+              </div>
+              <div style="text-align:right; background:var(--bg-surface); padding:0.5rem 0.75rem; border-radius:10px; border:1px solid var(--warning-border);">
+                <div class="form-hint">CA Hors Période</div>
+                <div id="hp-ca-days-val" class="mono" style="font-size:1.15rem; font-weight:800;">0 j</div>
+                <div id="hp-bonus-val" style="font-size:0.74rem; font-weight:800; color:var(--success-text);">Bonus : +0 j HP</div>
+              </div>
+            </div>
+            <div class="progress-bar-bg">
+              <div id="hp-progress-fill" class="progress-bar-fill" style="width:0%;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.68rem; color:var(--text-secondary);" class="mono">
+              <span>0 j</span>
+              <span>Palier 5 j (+1 HP)</span>
+              <span>Palier 8 j+ (+2 HP)</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title" style="margin-bottom:0.65rem;">📊 Tableau Comparatif des Droits &amp; Soldes Prévisionnels</h3>
+            <div class="table-wrapper">
+              <table class="ts-table">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th class="text-right">Droits Initiaux</th>
+                    <th class="text-right">Bonus Auto</th>
+                    <th class="text-right">Posés (Réel)</th>
+                    <th class="text-right">Prévisions</th>
+                    <th class="text-right">Solde Prévisionnel</th>
+                  </tr>
+                </thead>
+                <tbody id="forecast-comparison-tbody">
+                  <!-- Rempli dynamiquement -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Liste interactive des prévisions enregistrées -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title">📋 Prévisions Enregistrées (<span id="fc-list-count">0</span>)</h3>
+            <p class="card-desc">Filtrez vos prévisions, validez-les directement en pointage réel ou supprimez-les.</p>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <select id="fc-filter-type" class="select select-sm">
+              <option value="ALL">Tous les types</option>
+            </select>
+            <button type="button" id="btn-clear-year-forecasts" class="btn btn-danger btn-sm">Effacer l'année</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table class="ts-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Jour</th>
+                <th>Type</th>
+                <th>Période</th>
+                <th>Jours Ouvrés</th>
+                <th>Hors Période ?</th>
+                <th>Commentaire</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="forecast-list-tbody">
+              <!-- Rempli dynamiquement -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ONGLET 3 : TIMER (COMPTE À REBOURS CONFIGURABLE)
+         ==================================================================== -->
+    <section id="panel-timer" class="tab-panel" role="tabpanel">
+      <div class="card timer-wrapper">
+        <h2 class="card-title" style="justify-content:center; font-size:1.1rem;">⏳ Compte à Rebours Configurable</h2>
+        <p class="card-desc">Configurez les heures, minutes et secondes. Le chronomètre reste actif même lorsque vous changez d'onglet.</p>
+
+        <div id="timer-alert-banner" style="display:none; margin-top:0.75rem; padding:0.65rem; border-radius:10px; background:var(--success-bg); color:var(--success-text); border:1px solid var(--success-border); font-weight:700;">
+          🔔 Temps écoulé ! Le compte à rebours est terminé.
+        </div>
+
+        <div class="timer-ring-box">
+          <svg viewBox="0 0 120 120">
+            <circle class="timer-ring-bg" cx="60" cy="60" r="52" stroke-width="8"></circle>
+            <circle id="timer-ring-fg" class="timer-ring-fg" cx="60" cy="60" r="52" stroke-width="8"
+              stroke-dasharray="326.7256" stroke-dashoffset="0"></circle>
+          </svg>
+          <div class="timer-center-text">
+            <div id="timer-display" class="timer-digits mono">00:45:00</div>
+            <div id="timer-status-label" class="form-hint" style="font-weight:700; margin-top:4px;">PRÊT</div>
+          </div>
+        </div>
+
+        <div class="timer-inputs-row">
+          <div class="timer-input-box">
+            <label class="form-label" for="timer-h">Heures (HH)</label>
+            <input type="number" id="timer-h" class="mono" min="0" max="99" value="0" />
+          </div>
+          <div class="timer-input-box">
+            <label class="form-label" for="timer-m">Minutes (MM)</label>
+            <input type="number" id="timer-m" class="mono" min="0" max="59" value="45" />
+          </div>
+          <div class="timer-input-box">
+            <label class="form-label" for="timer-s">Secondes (SS)</label>
+            <input type="number" id="timer-s" class="mono" min="0" max="59" value="0" />
+          </div>
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:0.5rem; margin-bottom:1rem;">
+          <button type="button" id="btn-timer-start" class="btn btn-success">▶ Démarrer</button>
+          <button type="button" id="btn-timer-pause" class="btn btn-warning">⏸ Pause</button>
+          <button type="button" id="btn-timer-reset" class="btn">↺ Réinitialiser</button>
+        </div>
+
+        <div style="border-top:1px solid var(--border-color); padding-top:0.85rem;">
+          <div class="form-hint" style="margin-bottom:0.5rem; font-weight:600;">Préréglages rapides :</div>
+          <div id="timer-presets" style="display:flex; flex-wrap:wrap; justify-content:center; gap:0.45rem;">
+            <button type="button" class="btn btn-sm" data-preset="0,15,0">15 min</button>
+            <button type="button" class="btn btn-sm" data-preset="0,30,0">30 min</button>
+            <button type="button" class="btn btn-sm" data-preset="meal">🍽️ 45 min (Pause repas)</button>
+            <button type="button" class="btn btn-sm" data-preset="halfday">🕒 4h03 (Demi-journée)</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ONGLET 4 : CONFIGURATION
+         ==================================================================== -->
+    <section id="panel-configuration" class="tab-panel" role="tabpanel">
+      <div class="two-col-grid">
+        <!-- Zone 1 : Durées de travail -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">⏱️ Zone : Durées de Travail</h2>
+              <p class="card-desc">Paramètres horaires de référence pour tous les calculs journaliers, hebdomadaires et RCB.</p>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="cfg-day-dur">Durée journée de travail</label>
+              <input type="time" id="cfg-day-dur" class="input mono" value="08:06" />
+              <span class="form-hint">Défaut : 08:06</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cfg-halfday-dur">Durée demi-journée de travail</label>
+              <input type="time" id="cfg-halfday-dur" class="input mono" value="04:03" />
+              <span class="form-hint">Défaut : 04:03</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cfg-week-dur">Durée semaine de travail (HH:MM)</label>
+              <input type="text" id="cfg-week-dur" class="input mono" value="40:30" placeholder="40:30" />
+              <span class="form-hint">Défaut : 40:30 (1/10e = <span id="cfg-preview-10">04:03</span>, 1/5e = <span id="cfg-preview-5">08:06</span>)</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cfg-meal-dur">Durée pause repas</label>
+              <input type="time" id="cfg-meal-dur" class="input mono" value="00:45" />
+              <span class="form-hint">Défaut : 00:45</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Zone 2 : Droits Congés / RTT & Reliquats -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">🏖️ Zone : Droits Congés / RTT &amp; Reliquats</h2>
+              <p class="card-desc">Droits annuels en jours et reliquats d'heures reportés de l'année N-1.</p>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="cfg-ca-days">CA (jours)</label>
+              <input type="number" step="0.5" id="cfg-ca-days" class="input mono" value="25" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cfg-rtt-days">RTT (jours)</label>
+              <input type="number" step="0.5" id="cfg-rtt-days" class="input mono" value="15" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cfg-hp-days">HP (jours de base) <span id="cfg-hp-auto-tag" style="color:var(--success-text);">+0 auto</span></label>
+              <input type="number" step="0.5" id="cfg-hp-days" class="input mono" value="0" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cfg-caa-days">CAA (jours)</label>
+              <input type="number" step="0.5" id="cfg-caa-days" class="input mono" value="0" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cfg-hpa-days">HPA (jours)</label>
+              <input type="number" step="0.5" id="cfg-hpa-days" class="input mono" value="0" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cfg-cet-days">Nombre de jours en CET</label>
+              <input type="number" step="0.5" id="cfg-cet-days" class="input mono" value="0" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cfg-rel-n1">Reliquat d'heures N-1 (±HH:MM)</label>
+              <input type="text" id="cfg-rel-n1" class="input mono" value="+00:00" placeholder="+00:00" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cfg-rel-ca-n1">Reliquat d'heures CA N-1 (±HH:MM)</label>
+              <input type="text" id="cfg-rel-ca-n1" class="input mono" value="+00:00" placeholder="+00:00" />
+              <span class="form-hint">S'ajoute au cumul d'heures de l'année en cours</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zone 3 : Année & Vacances Scolaires Françaises -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">🇫🇷 Zone : Année (2024 à 2040) &amp; Vacances Scolaires Françaises</h2>
+            <p class="card-desc">Calcul automatique des jours fériés français (fixes + Pâques, Ascension, Pentecôte) et des vacances scolaires par zone.</p>
+          </div>
+        </div>
+        <div class="form-grid" style="margin-bottom:0.85rem;">
+          <div class="form-group">
+            <label class="form-label" for="cfg-year">Année sélectionnée (2024 à 2040)</label>
+            <select id="cfg-year" class="select mono"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cfg-vac-zone">Zone vacances scolaires France</label>
+            <select id="cfg-vac-zone" class="select">
+              <option value="A">Zone A (Besançon, Bordeaux, Clermont, Dijon, Grenoble, Limoges, Lyon, Poitiers)</option>
+              <option value="B">Zone B (Aix-Marseille, Amiens, Lille, Nancy-Metz, Nantes, Nice, Normandie, Orléans-Tours, Reims, Rennes, Strasbourg)</option>
+              <option value="C">Zone C (Créteil, Montpellier, Paris, Toulouse, Versailles)</option>
+              <option value="CORSE">Corse</option>
+              <option value="NONE">Aucune zone affichée</option>
+            </select>
+          </div>
+        </div>
+        <div class="two-col-grid">
+          <div style="background:var(--bg-surface-alt); padding:0.75rem; border-radius:10px; border:1px solid var(--border-color);">
+            <strong style="font-size:0.78rem;">🎒 Périodes de vacances scolaires (<span id="cfg-vac-year-title">2026</span>) :</strong>
+            <div id="cfg-vac-list" style="margin-top:6px; font-size:0.75rem; color:var(--text-secondary); display:flex; flex-wrap:wrap; gap:6px;"></div>
+          </div>
+          <div style="background:var(--bg-surface-alt); padding:0.75rem; border-radius:10px; border:1px solid var(--border-color);">
+            <strong style="font-size:0.78rem;">🇫🇷 Jours fériés français (<span id="cfg-hol-year-title">2026</span>) :</strong>
+            <div id="cfg-hol-list" style="margin-top:6px; font-size:0.75rem; color:var(--text-secondary); display:flex; flex-wrap:wrap; gap:6px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zone 4 : Périodes de 28 jours (Vingt-huitaines) -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">📆 Zone : Périodes de 28 Jours (Vingt-huitaines)</h2>
+            <p class="card-desc">Définissez la date de début de la première vingt-huitaine de l'année ou ajustez individuellement les 13 périodes ci-dessous.</p>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; align-items:center; gap:0.5rem;">
+            <label class="form-label" for="cfg-p28-start">Début P1 :</label>
+            <input type="date" id="cfg-p28-start" class="input input-sm mono" />
+            <button type="button" id="btn-regen-p28" class="btn btn-sm">Recalculer cycles de 28j</button>
+          </div>
+        </div>
+        <div class="table-wrapper" style="max-height:290px; overflow-y:auto;">
+          <table class="ts-table">
+            <thead>
+              <tr>
+                <th>Période</th>
+                <th>Date Début (J1)</th>
+                <th>Date Fin (J28)</th>
+                <th class="text-right">Durée</th>
+                <th class="text-right">Solde Actuel</th>
+                <th>Règle RCB Appliquée</th>
+              </tr>
+            </thead>
+            <tbody id="cfg-p28-tbody">
+              <!-- Rempli dynamiquement -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Zone 5 : Variables Congés & Événements -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">🏷️ Zone : Variables Congés &amp; Événements</h2>
+            <p class="card-desc">Configurez les durées, libellés, icônes et compteurs impactés pour chaque code (RTT, CA, CAA, HP, HPA, RCB, ASA, CMO, F, etc.).</p>
+          </div>
+          <button type="button" id="btn-add-leave-type" class="btn btn-primary btn-sm">+ Ajouter un code</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="ts-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Libellé</th>
+                <th class="text-center">Icône</th>
+                <th class="text-center">1/2 Journée</th>
+                <th class="text-center">Journée</th>
+                <th>Compteur Impacté</th>
+                <th>Mode de Calcul</th>
+                <th class="text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="cfg-leave-types-tbody">
+              <!-- Rempli dynamiquement -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Zone 6 : Apparence, Sauvegarde & Diagnostic Grist -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">💾 Zone : Apparence, Sauvegarde &amp; Connexion Grist</h2>
+            <p class="card-desc">Toutes vos modifications sont sauvegardées instantanément en local (localStorage) et synchronisables avec Grist.</p>
+          </div>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:0.75rem;">
+          <div style="display:flex; flex-wrap:wrap; align-items:center; gap:0.5rem;">
+            <button type="button" id="btn-cfg-theme" class="btn">🌓 Basculer Thème Clair / Sombre</button>
+            <button type="button" id="btn-export-json" class="btn">⬇️ Exporter JSON</button>
+            <label class="btn" style="cursor:pointer;">
+              ⬆️ Importer JSON
+              <input type="file" id="input-import-json" accept=".json" style="display:none;" />
+            </label>
+            <button type="button" id="btn-grist-sync-cfg" class="btn btn-primary">🔄 Synchroniser / Créer tables Grist</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <button type="button" id="btn-reset-data" class="btn btn-danger">⚠️ Réinitialiser les données</button>
+          </div>
+        </div>
+        <div id="grist-diagnostic-box" style="margin-top:0.85rem; padding:0.65rem 0.85rem; border-radius:8px; background:var(--bg-surface-alt); border:1px solid var(--border-color); font-size:0.75rem; color:var(--text-secondary);">
+          Diagnostic Grist : Initialisation en cours...
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- CONTENEUR DES NOTIFICATIONS TOAST -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- ========================================================================
+       SCRIPT APPLICATIF 100% AUTONOME (DOMContentLoaded + DÉLÉGATION)
+       ======================================================================== -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      'use strict';
+
+      /* ======================================================================
+         1. CONSTANTES & ÉTAT INITIAL
+         ====================================================================== */
+      const STORAGE_KEY = 'chronogrist_app_state_v2';
+      const SYSTEM_TODAY = new Date();
+      const INITIAL_YEAR = Math.min(2040, Math.max(2024, SYSTEM_TODAY.getFullYear()));
+
+      const DEFAULT_LEAVE_TYPES = [
+        { code: 'CA',  label: 'Congés Annuels',                icon: '☀️', halfMin: 243, fullMin: 486, counter: 'CA',   mode: 'CREDIT_LEAVE' },
+        { code: 'RTT', label: 'RTT',                           icon: '🏖️', halfMin: 243, fullMin: 486, counter: 'RTT',  mode: 'CREDIT_LEAVE' },
+        { code: 'HP',  label: 'Hors Période',                  icon: '🍂', halfMin: 243, fullMin: 486, counter: 'HP',   mode: 'CREDIT_LEAVE' },
+        { code: 'CAA', label: 'Congés Annuels Antérieurs',     icon: '🗓️', halfMin: 243, fullMin: 486, counter: 'CAA',  mode: 'CREDIT_LEAVE' },
+        { code: 'HPA', label: 'Hors Période Antérieur',        icon: '🍁', halfMin: 243, fullMin: 486, counter: 'HPA',  mode: 'CREDIT_LEAVE' },
+        { code: 'RCB', label: 'Repos Compensé Badgé (RCB)',    icon: '⚡', halfMin: 243, fullMin: 486, counter: 'RCB',  mode: 'DEDUCT_RCB'   },
+        { code: 'ASA', label: 'Autorisation Spéciale Absence', icon: '📋', halfMin: 243, fullMin: 486, counter: 'NONE', mode: 'CREDIT_LEAVE' },
+        { code: 'CMO', label: 'Congé Maladie Ordinaire',       icon: '🏥', halfMin: 243, fullMin: 486, counter: 'NONE', mode: 'CREDIT_LEAVE' },
+        { code: 'F',   label: 'Formation / Mission',           icon: '🎓', halfMin: 243, fullMin: 486, counter: 'NONE', mode: 'CREDIT_LEAVE' }
+      ];
+
+      function generateDefaultPeriods28(year, startISO) {
+        const periods = [];
+        let cursor = parseDateISO(startISO || `${year}-01-05`);
+        for (let i = 1; i <= 13; i++) {
+          const end = addDays(cursor, 27);
+          periods.push({
+            num: i,
+            start: formatDateISO(cursor),
+            end: formatDateISO(end)
+          });
+          cursor = addDays(end, 1);
+        }
+        return periods;
+      }
+
+      const DEFAULT_CONFIG = {
+        theme: 'light',
+        selectedYear: INITIAL_YEAR,
+        selectedMonth: SYSTEM_TODAY.getMonth(),
+        dayFilter: 'all',
+        dayDuration: '08:06',
+        halfDayDuration: '04:03',
+        weekDuration: '40:30',
+        mealDuration: '00:45',
+        caDays: 25,
+        rttDays: 15,
+        hpDays: 0,
+        caaDays: 0,
+        hpaDays: 0,
+        cetDays: 0,
+        reliquatN1: '+00:00',
+        reliquatCaN1: '+00:00',
+        vacationZone: 'C',
+        p28StartDate: `${INITIAL_YEAR}-01-05`,
+        periods28ByYear: {}
+      };
+
+      let state = {
+        config: { ...DEFAULT_CONFIG },
+        leaveTypes: JSON.parse(JSON.stringify(DEFAULT_LEAVE_TYPES)),
+        entries: {},   // { "YYYY-MM-DD": { inAM, outAM, inPM, outPM, typeAM, typePM } }
+        forecasts: []  // [ { id, date, type, part: 'FULL'|'AM'|'PM', comment } ]
+      };
+
+      let activeTargetDate = formatDateISO(SYSTEM_TODAY);
+      let resetConfirmArm = false;
+      let gristApiReady = false;
+      let inIframe = false;
+
+      // État du Timer
+      let timerTotalSec = 45 * 60;
+      let timerRemSec = 45 * 60;
+      let timerInterval = null;
+
+      /* ======================================================================
+         2. UTILITAIRES DE DATES, HEURES & FORMULES MÉTIER
+         ====================================================================== */
+      function parseTimeToMinutes(str) {
+        if (!str || typeof str !== 'string') return null;
+        const clean = str.trim();
+        const m = clean.match(/^([+-])?(\d{1,3}):(\d{2})$/);
+        if (!m) return null;
+        const sign = m[1] === '-' ? -1 : 1;
+        return sign * (parseInt(m[2], 10) * 60 + parseInt(m[3], 10));
+      }
+
+      function formatMinutesHHMM(totalMin) {
+        if (totalMin === null || totalMin === undefined || isNaN(totalMin)) return '--:--';
+        const rounded = Math.round(totalMin);
+        const sign = rounded < 0 ? '-' : '';
+        const abs = Math.abs(rounded);
+        const h = Math.floor(abs / 60);
+        const m = abs % 60;
+        return `${sign}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      }
+
+      function formatSignedMinutes(totalMin) {
+        if (totalMin === null || totalMin === undefined || isNaN(totalMin)) return '00:00';
+        const rounded = Math.round(totalMin);
+        if (rounded === 0) return '00:00';
+        const sign = rounded > 0 ? '+' : '-';
+        const abs = Math.abs(rounded);
+        const h = Math.floor(abs / 60);
+        const m = abs % 60;
+        return `${sign}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      }
+
+      function formatDateISO(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      }
+
+      function parseDateISO(iso) {
+        const [y, m, d] = iso.split('-').map(Number);
+        return new Date(y, m - 1, d, 12, 0, 0);
+      }
+
+      function formatDateFR(iso) {
+        if (!iso || iso.length < 10) return '--/--/----';
+        return `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
+      }
+
+      function addDays(dateObj, n) {
+        const res = new Date(dateObj);
+        res.setDate(res.getDate() + n);
+        return res;
+      }
+
+      function getISOWeek(dateObj) {
+        const d = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
+        const dayNum = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      }
+
+      function getLeaveType(code) {
+        return state.leaveTypes.find(lt => lt.code === code) || null;
+      }
+
+      /**
+       * Heure Reprise Repas = Sortie Matin + Durée pause repas
+       */
+      function computeRepriseRepas(outAMStr, mealDurMin) {
+        const outMin = parseTimeToMinutes(outAMStr);
+        if (outMin === null) return '--:--';
+        return formatMinutesHHMM(outMin + mealDurMin);
+      }
+
+      /**
+       * Départ Prévu Soir (formule exacte en fractions de jour) :
+       * Heure entrée après-midi + Heure journée travail - (Heure sortie matin - Heure arrivée matin) + 0.03125 * (Heure entrée après-midi - Heure sortie matin)
+       */
+      function computeDepartPrevu(entry, dayDurMin, halfDurMin) {
+        const inPM = parseTimeToMinutes(entry.inPM);
+        if (inPM === null) return '--:--';
+
+        const inAM = parseTimeToMinutes(entry.inAM);
+        const outAM = parseTimeToMinutes(entry.outAM);
+
+        let morningWorkedMin = null;
+        if (inAM !== null && outAM !== null && outAM >= inAM) {
+          morningWorkedMin = outAM - inAM;
+        } else if (entry.typeAM) {
+          const lt = getLeaveType(entry.typeAM);
+          morningWorkedMin = lt ? lt.halfMin : halfDurMin;
+        }
+
+        if (morningWorkedMin === null) return '--:--';
+
+        const lunchGapMin = (outAM !== null && inPM >= outAM) ? (inPM - outAM) : 0;
+
+        // Conversion en fractions de jour (1 jour = 1440 min) pour appliquer la formule exacte
+        const fInPM = inPM / 1440;
+        const fDay = dayDurMin / 1440;
+        const fMorningWorked = morningWorkedMin / 1440;
+        const fLunchGap = lunchGapMin / 1440;
+
+        const fDepart = fInPM + fDay - fMorningWorked + 0.03125 * fLunchGap;
+        return formatMinutesHHMM(fDepart * 1440);
+      }
+
+      /* ======================================================================
+         3. JOURS FÉRIÉS FRANÇAIS & VACANCES SCOLAIRES (2024 À 2040)
+         ====================================================================== */
+      function getEasterSunday(year) {
+        const a = year % 19;
+        const b = Math.floor(year / 100);
+        const c = year % 100;
+        const d = Math.floor(b / 4);
+        const e = b % 4;
+        const f = Math.floor((b + 8) / 25);
+        const g = Math.floor((b - f + 1) / 3);
+        const h = (19 * a + b - d - g + 15) % 30;
+        const i = Math.floor(c / 4);
+        const k = c % 4;
+        const l = (32 + 2 * e + 2 * i - h - k) % 7;
+        const m = Math.floor((a + 11 * h + 22 * l) / 451);
+        const month = Math.floor((h + l - 7 * m + 114) / 31);
+        const day = ((h + l - 7 * m + 114) % 31) + 1;
+        return new Date(year, month - 1, day, 12, 0, 0);
+      }
+
+      function getFrenchPublicHolidays(year) {
+        const easter = getEasterSunday(year);
+        const list = [
+          { date: `${year}-01-01`, name: "Jour de l'an" },
+          { date: formatDateISO(addDays(easter, 1)), name: 'Lundi de Pâques' },
+          { date: `${year}-05-01`, name: 'Fête du Travail' },
+          { date: `${year}-05-08`, name: 'Victoire 1945' },
+          { date: formatDateISO(addDays(easter, 39)), name: 'Ascension' },
+          { date: formatDateISO(addDays(easter, 50)), name: 'Lundi de Pentecôte' },
+          { date: `${year}-07-14`, name: 'Fête Nationale' },
+          { date: `${year}-08-15`, name: 'Assomption' },
+          { date: `${year}-11-01`, name: 'Toussaint' },
+          { date: `${year}-11-11`, name: 'Armistice 1918' },
+          { date: `${year}-12-25`, name: 'Noël' }
+        ];
+        const map = {};
+        list.forEach(item => { map[item.date] = item.name; });
+        return { list, map };
+      }
+
+      const KNOWN_VACATIONS = {
+        2025: {
+          A: [['2025-02-22','2025-03-09','Hiver'],['2025-04-19','2025-05-04','Printemps'],['2025-07-05','2025-08-31','Été'],['2025-10-18','2025-11-02','Toussaint'],['2025-12-20','2026-01-04','Noël']],
+          B: [['2025-02-08','2025-02-23','Hiver'],['2025-04-05','2025-04-21','Printemps'],['2025-07-05','2025-08-31','Été'],['2025-10-18','2025-11-02','Toussaint'],['2025-12-20','2026-01-04','Noël']],
+          C: [['2025-02-15','2025-03-02','Hiver'],['2025-04-12','2025-04-27','Printemps'],['2025-07-05','2025-08-31','Été'],['2025-10-18','2025-11-02','Toussaint'],['2025-12-20','2026-01-04','Noël']],
+          CORSE: [['2025-02-15','2025-03-02','Hiver'],['2025-04-12','2025-04-27','Printemps'],['2025-07-05','2025-09-01','Été'],['2025-10-18','2025-11-02','Toussaint'],['2025-12-20','2026-01-04','Noël']]
+        },
+        2026: {
+          A: [['2026-01-01','2026-01-04','Noël'],['2026-02-07','2026-02-22','Hiver'],['2026-04-04','2026-04-19','Printemps'],['2026-07-04','2026-08-31','Été'],['2026-10-17','2026-11-01','Toussaint'],['2026-12-19','2026-12-31','Noël']],
+          B: [['2026-01-01','2026-01-04','Noël'],['2026-02-14','2026-03-01','Hiver'],['2026-04-11','2026-04-26','Printemps'],['2026-07-04','2026-08-31','Été'],['2026-10-17','2026-11-01','Toussaint'],['2026-12-19','2026-12-31','Noël']],
+          C: [['2026-01-01','2026-01-04','Noël'],['2026-02-21','2026-03-08','Hiver'],['2026-04-18','2026-05-03','Printemps'],['2026-07-04','2026-08-31','Été'],['2026-10-17','2026-11-01','Toussaint'],['2026-12-19','2026-12-31','Noël']],
+          CORSE: [['2026-01-01','2026-01-04','Noël'],['2026-02-14','2026-03-01','Hiver'],['2026-04-11','2026-04-26','Printemps'],['2026-07-04','2026-09-01','Été'],['2026-10-17','2026-11-01','Toussaint'],['2026-12-19','2026-12-31','Noël']]
+        }
+      };
+
+      function getSchoolVacationRanges(year, zone) {
+        if (!zone || zone === 'NONE') return [];
+        if (KNOWN_VACATIONS[year] && KNOWN_VACATIONS[year][zone]) {
+          return KNOWN_VACATIONS[year][zone];
+        }
+        // Projection calendaire officielle par rotation des zones A, B, C jusqu'en 2040
+        const baseShift = { A: 0, B: 7, C: 14, CORSE: 7 }[zone] || 0;
+        const rot = (((year - 2026) % 3) + 3) % 3 * 7;
+        const shift = (baseShift + rot) % 21;
+        return [
+          [`${year}-01-01`, `${year}-01-04`, 'Noël'],
+          [formatDateISO(addDays(new Date(year, 1, 7, 12), shift)), formatDateISO(addDays(new Date(year, 1, 22, 12), shift)), 'Hiver'],
+          [formatDateISO(addDays(new Date(year, 3, 4, 12), shift)), formatDateISO(addDays(new Date(year, 3, 19, 12), shift)), 'Printemps'],
+          [`${year}-07-05`, `${year}-08-31`, 'Été'],
+          [`${year}-10-18`, `${year}-11-02`, 'Toussaint'],
+          [`${year}-12-19`, `${year}-12-31`, 'Noël']
+        ];
+      }
+
+      /* ======================================================================
+         4. MOTEUR DE CALCUL MÉTIER (CUMUL, VINGT-HUITAINES RCB, BONUS HP)
+         ====================================================================== */
+      function getYearPeriods28(year) {
+        if (!state.config.periods28ByYear) state.config.periods28ByYear = {};
+        if (!Array.isArray(state.config.periods28ByYear[year]) || state.config.periods28ByYear[year].length === 0) {
+          const defaultStart = state.config.p28StartDate && state.config.p28StartDate.startsWith(String(year))
+            ? state.config.p28StartDate
+            : `${year}-01-05`;
+          state.config.periods28ByYear[year] = generateDefaultPeriods28(year, defaultStart);
+        }
+        return state.config.periods28ByYear[year];
+      }
+
+      /**
+       * Calcul automatique des Hors Période (HP) :
+       * Compte les jours de CA pris et/ou prévus hors du 1er mai au 31 octobre.
+       * 5, 6 ou 7 jours = +1 jour HP ; 8 jours ou plus = +2 jours HP.
+       */
+      function computeAutoHP(year) {
+        const slotMap = new Map();
+
+        state.forecasts.forEach(fc => {
+          if (!fc.date.startsWith(`${year}-`)) return;
+          if (fc.part === 'FULL' || fc.part === 'AM') slotMap.set(`${fc.date}_AM`, fc.type);
+          if (fc.part === 'FULL' || fc.part === 'PM') slotMap.set(`${fc.date}_PM`, fc.type);
+        });
+
+        Object.entries(state.entries).forEach(([iso, entry]) => {
+          if (!iso.startsWith(`${year}-`)) return;
+          if (entry.typeAM) slotMap.set(`${iso}_AM`, entry.typeAM);
+          if (entry.typePM) slotMap.set(`${iso}_PM`, entry.typePM);
+        });
+
+        let halfDaysOutside = 0;
+        slotMap.forEach((code, key) => {
+          if (code === 'CA') {
+            const month = parseInt(key.slice(5, 7), 10); // 1..12
+            if (month < 5 || month > 10) {
+              halfDaysOutside += 1;
+            }
+          }
+        });
+
+        const caOutsideDays = halfDaysOutside * 0.5;
+        let bonusHP = 0;
+        if (caOutsideDays >= 8) bonusHP = 2;
+        else if (caOutsideDays >= 5) bonusHP = 1;
+
+        return { caOutsideDays, bonusHP };
+      }
+
+      function computeYearModel(year) {
+        const cfg = state.config;
+        const dayDurMin = parseTimeToMinutes(cfg.dayDuration) ?? 486;
+        const halfDurMin = parseTimeToMinutes(cfg.halfDayDuration) ?? 243;
+        const weekDurMin = parseTimeToMinutes(cfg.weekDuration) ?? 2430;
+        const mealDurMin = parseTimeToMinutes(cfg.mealDuration) ?? 45;
+
+        const relN1Min = parseTimeToMinutes(cfg.reliquatN1) ?? 0;
+        const relCaN1Min = parseTimeToMinutes(cfg.reliquatCaN1) ?? 0;
+        let runningCumulMin = relN1Min + relCaN1Min;
+
+        const holidays = getFrenchPublicHolidays(year);
+        const vacRanges = getSchoolVacationRanges(year, cfg.vacationZone);
+        const periods28 = getYearPeriods28(year).map(p => ({
+          ...p,
+          netMin: 0,
+          rcbHalfCount: 0,
+          ruleStatus: 'En attente'
+        }));
+
+        const forecastsByDate = {};
+        state.forecasts.forEach(fc => {
+          if (!forecastsByDate[fc.date]) forecastsByDate[fc.date] = [];
+          forecastsByDate[fc.date].push(fc);
+        });
+
+        const takenDays = { CA: 0, RTT: 0, HP: 0, CAA: 0, HPA: 0, CET: 0, RCB: 0 };
+        const days = [];
+        const todayISO = formatDateISO(SYSTEM_TODAY);
+
+        const startYear = new Date(year, 0, 1, 12, 0, 0);
+        const endYear = new Date(year, 11, 31, 12, 0, 0);
+
+        for (let d = new Date(startYear); d <= endYear; d = addDays(d, 1)) {
+          const iso = formatDateISO(d);
+          const dow = d.getDay(); // 0=Dim..6=Sam
+          const isWeekend = (dow === 0 || dow === 6);
+          const holidayName = holidays.map[iso] || null;
+          const isNonWorking = isWeekend || Boolean(holidayName);
+
+          let vacName = null;
+          for (const [vStart, vEnd, vLabel] of vacRanges) {
+            if (iso >= vStart && iso <= vEnd) {
+              vacName = `Vac. ${vLabel}`;
+              break;
+            }
+          }
+
+          // Période 28 jours correspondante
+          let p28Info = null;
+          for (const p of periods28) {
+            if (iso >= p.start && iso <= p.end) {
+              const dStart = parseDateISO(p.start);
+              const dayIdx = Math.round((d - dStart) / 86400000) + 1;
+              p28Info = {
+                period: p,
+                num: p.num,
+                dayIdx,
+                isLastDay: (iso === p.end)
+              };
+              break;
+            }
+          }
+
+          const entry = state.entries[iso] || {};
+
+          // Calcul Matin
+          let morningWorkedMin = 0;
+          let rcbHalfUsed = 0;
+          if (entry.typeAM) {
+            const lt = getLeaveType(entry.typeAM);
+            if (lt) {
+              if (lt.mode === 'DEDUCT_RCB' || lt.code === 'RCB') {
+                // RCB n'est pas un congé : il ne crédite pas le temps travaillé et déduit 04:03 du cumul
+                rcbHalfUsed += 1;
+                takenDays.RCB += 0.5;
+              } else {
+                morningWorkedMin += lt.halfMin;
+                if (takenDays[lt.counter] !== undefined) takenDays[lt.counter] += 0.5;
+              }
+            } else {
+              morningWorkedMin += halfDurMin;
+            }
+          } else {
+            const mIn = parseTimeToMinutes(entry.inAM);
+            const mOut = parseTimeToMinutes(entry.outAM);
+            if (mIn !== null && mOut !== null && mOut > mIn) {
+              morningWorkedMin += (mOut - mIn);
+            }
+          }
+
+          // Calcul Après-midi
+          let afternoonWorkedMin = 0;
+          if (entry.typePM) {
+            const lt = getLeaveType(entry.typePM);
+            if (lt) {
+              if (lt.mode === 'DEDUCT_RCB' || lt.code === 'RCB') {
+                rcbHalfUsed += 1;
+                takenDays.RCB += 0.5;
+              } else {
+                afternoonWorkedMin += lt.halfMin;
+                if (takenDays[lt.counter] !== undefined) takenDays[lt.counter] += 0.5;
+              }
+            } else {
+              afternoonWorkedMin += halfDurMin;
+            }
+          } else {
+            const aIn = parseTimeToMinutes(entry.inPM);
+            const aOut = parseTimeToMinutes(entry.outPM);
+            if (aIn !== null && aOut !== null && aOut > aIn) {
+              afternoonWorkedMin += (aOut - aIn);
+            }
+          }
+
+          const totalDayMin = morningWorkedMin + afternoonWorkedMin;
+          const hasAnyInput = totalDayMin > 0 || rcbHalfUsed > 0 || Boolean(entry.inAM) || Boolean(entry.inPM);
+          const isPastOrToday = iso <= todayISO;
+
+          // Reliquat jour = Total heure du jour - Durée journée de travail
+          // Pour les journées futures sans saisie, le reliquat reste à 0 afin de préserver la lecture du cumul actuel
+          let reliquatDayMin = 0;
+          if (!isNonWorking && (hasAnyInput || isPastOrToday)) {
+            reliquatDayMin = totalDayMin - dayDurMin;
+          } else if (isNonWorking && totalDayMin > 0) {
+            reliquatDayMin = totalDayMin; // Heures effectuées un week-end/férié
+          }
+
+          // Cumul jour = reliquat jour + cumul jour précédent
+          // (Note : lorsqu'un RCB de 04h03 est posé sans crédit congé, totalDayMin est réduit de 04h03,
+          // donc reliquatDayMin et runningCumulMin déduisent exactement 04h03 !)
+          runningCumulMin += reliquatDayMin;
+
+          if (p28Info) {
+            p28Info.period.netMin += reliquatDayMin;
+            p28Info.period.rcbHalfCount += rcbHalfUsed;
+          }
+
+          days.push({
+            dateObj: new Date(d),
+            iso,
+            month: d.getMonth(),
+            dow,
+            isoWeek: getISOWeek(d),
+            isWeekend,
+            holidayName,
+            vacName,
+            isNonWorking,
+            p28Info,
+            entry,
+            forecasts: forecastsByDate[iso] || [],
+            repriseRepas: computeRepriseRepas(entry.outAM, mealDurMin),
+            departPrevu: computeDepartPrevu(entry, dayDurMin, halfDurMin),
+            totalDayMin,
+            reliquatDayMin,
+            cumulMin: runningCumulMin,
+            hasRCB: rcbHalfUsed > 0,
+            rcbDeductedMin: rcbHalfUsed * halfDurMin
+          });
+        }
+
+        // Évaluation réglementaire de chaque vingt-huitaine (P1..P13)
+        const oneTenth = Math.round(weekDurMin / 10); // 04:03
+        const oneFifth = Math.round(weekDurMin / 5);  // 08:06
+
+        periods28.forEach(p => {
+          const s = p.netMin;
+          if (s === 0) {
+            p.ruleStatus = 'Équilibré (00:00)';
+          } else if (s > 0) {
+            if (s < oneTenth) {
+              p.ruleStatus = `Crédit < 1/10e : ${formatSignedMinutes(s)} reporté sur 4 semaines`;
+            } else if (s === oneTenth) {
+              p.ruleStatus = `Crédit = 1/10e : Droit à 1/2 j RCB (${formatMinutesHHMM(oneTenth)}) sous 4 sem.`;
+            } else {
+              const surplus = s - oneTenth;
+              p.ruleStatus = `Crédit > 1/10e : ${formatMinutesHHMM(oneTenth)} en RCB + ${formatMinutesHHMM(surplus)} reporté (accord chef)`;
+            }
+          } else {
+            const debit = Math.abs(s);
+            if (debit < oneTenth) {
+              p.ruleStatus = `Débit < 1/10e : ${formatSignedMinutes(s)} à compenser sur la période suivante`;
+            } else if (debit < oneFifth) {
+              p.ruleStatus = `Débit ≥ 1/10e et < 1/5e : -0,5 j A.R.T.T. décompté`;
+            } else {
+              p.ruleStatus = `Débit ≥ 1/5e : -1,0 j A.R.T.T. (ou autre solde hors CA)`;
+            }
+          }
+        });
+
+        const autoHP = computeAutoHP(year);
+
+        return {
+          days,
+          periods28,
+          takenDays,
+          autoHP,
+          oneTenth,
+          oneFifth,
+          weekDurMin,
+          dayDurMin,
+          halfDurMin,
+          mealDurMin,
+          holidays,
+          vacRanges
+        };
+      }
+
+      /* ======================================================================
+         5. PERSISTANCE LOCALSTORAGE & INTÉGRATION SÉCURISÉE GRIST
+         ====================================================================== */
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            state.config = { ...DEFAULT_CONFIG, ...(parsed.config || {}) };
+            state.leaveTypes = Array.isArray(parsed.leaveTypes) && parsed.leaveTypes.length
+              ? parsed.leaveTypes
+              : JSON.parse(JSON.stringify(DEFAULT_LEAVE_TYPES));
+            state.entries = parsed.entries || {};
+            state.forecasts = Array.isArray(parsed.forecasts) ? parsed.forecasts : [];
+          }
+        } catch (err) {
+          console.warn('Lecture localStorage ignorée:', err);
+        }
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (err) {
+          console.warn('Sauvegarde localStorage impossible:', err);
+        }
+        if (gristApiReady && window.grist && typeof window.grist.setOption === 'function') {
+          try {
+            window.grist.setOption('chronogrist_v2_state', state).catch(() => {});
+          } catch (e) { /* Ignore hors contexte Grist */ }
+        }
+      }
+
+      function initGristSafely() {
+        try {
+          inIframe = (window.self !== window.top);
+        } catch (e) {
+          inIframe = true;
+        }
+
+        const diagBox = document.getElementById('grist-diagnostic-box');
+        if (!inIframe) {
+          if (diagBox) {
+            diagBox.textContent = 'Diagnostic Grist : Ouvert en mode autonome hors iframe Grist. Sauvegarde locale (localStorage) active à 100%.';
+          }
+          return;
+        }
+
+        // Chargement asynchrone et non bloquant de l'API Grist
+        try {
+          const script = document.createElement('script');
+          script.src = 'https://docs.getgrist.com/grist-plugin-api.js';
+          script.async = true;
+          script.onload = () => {
+            try {
+              if (!window.grist) return;
+              window.grist.ready({ requiredAccess: 'full', allowSelectBy: true });
+              gristApiReady = true;
+
+              const pill = document.getElementById('grist-status-pill');
+              const txt = document.getElementById('grist-status-text');
+              if (pill) pill.classList.add('grist');
+              if (txt) txt.textContent = 'Connecté à Grist';
+
+              const btnHeader = document.getElementById('btn-grist-sync-header');
+              if (btnHeader) btnHeader.style.display = 'inline-flex';
+              if (diagBox) {
+                diagBox.textContent = 'Diagnostic Grist : API Grist chargée et connectée. Cliquez sur « Synchroniser / Créer tables Grist » pour pousser vos données dans le document.';
+              }
+
+              window.grist.onOptions((options) => {
+                if (options && options.chronogrist_v2_state) {
+                  const remote = options.chronogrist_v2_state;
+                  state.config = { ...state.config, ...(remote.config || {}) };
+                  if (Array.isArray(remote.leaveTypes)) state.leaveTypes = remote.leaveTypes;
+                  if (remote.entries) state.entries = { ...state.entries, ...remote.entries };
+                  if (Array.isArray(remote.forecasts)) state.forecasts = remote.forecasts;
+                  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                  renderAll();
+                }
+              });
+            } catch (err) {
+              if (diagBox) diagBox.textContent = 'Diagnostic Grist : Iframe détectée mais document vide ou accès restreint (mode local actif).';
+            }
+          };
+          script.onerror = () => {
+            if (diagBox) diagBox.textContent = 'Diagnostic Grist : API Grist inaccessible hors ligne — bascule transparente en mode local autonome.';
+          };
+          document.head.appendChild(script);
+        } catch (e) {
+          /* Jamais bloquant */
+        }
+      }
+
+      async function syncOrCreateGristTables() {
+        if (!gristApiReady || !window.grist) {
+          showToast('Mode autonome actif : données sauvegardées en local (ouvrable dans un widget Grist).', 'warning');
+          return;
+        }
+        try {
+          await window.grist.setOption('chronogrist_v2_state', state);
+          if (window.grist.docApi && typeof window.grist.docApi.listTables === 'function') {
+            const tables = await window.grist.docApi.listTables();
+            if (!tables.includes('Pointages')) {
+              await window.grist.docApi.applyUserActions([
+                ['AddTable', 'Pointages', [
+                  { id: 'Date_ISO', type: 'Text' },
+                  { id: 'Entree_Matin', type: 'Text' },
+                  { id: 'Sortie_Matin', type: 'Text' },
+                  { id: 'Type_Matin', type: 'Text' },
+                  { id: 'Entree_AM', type: 'Text' },
+                  { id: 'Sortie_AM', type: 'Text' },
+                  { id: 'Type_AM', type: 'Text' },
+                  { id: 'Total_Jour', type: 'Text' },
+                  { id: 'Reliquat_Jour', type: 'Text' },
+                  { id: 'Cumul_Heures', type: 'Text' }
+                ]]
+              ]);
+            }
+            const year = parseInt(state.config.selectedYear, 10);
+            const model = computeYearModel(year);
+            const filledDays = model.days.filter(d =>
+              d.entry.inAM || d.entry.outAM || d.entry.inPM || d.entry.outPM || d.entry.typeAM || d.entry.typePM
+            );
+            if (filledDays.length > 0) {
+              const rows = filledDays.map(d => [
+                'AddRecord', 'Pointages', null, {
+                  Date_ISO: d.iso,
+                  Entree_Matin: d.entry.inAM || '',
+                  Sortie_Matin: d.entry.outAM || '',
+                  Type_Matin: d.entry.typeAM || '',
+                  Entree_AM: d.entry.inPM || '',
+                  Sortie_AM: d.entry.outPM || '',
+                  Type_AM: d.entry.typePM || '',
+                  Total_Jour: formatMinutesHHMM(d.totalDayMin),
+                  Reliquat_Jour: formatSignedMinutes(d.reliquatDayMin),
+                  Cumul_Heures: formatSignedMinutes(d.cumulMin)
+                }
+              ]);
+              await window.grist.docApi.applyUserActions(rows);
+            }
+          }
+          showToast('Synchronisation Grist réussie !', 'success');
+        } catch (err) {
+          showToast('Options sauvegardées dans Grist (vérifiez les droits d’édition du document pour les tables).', 'warning');
+        }
+      }
+
+      /* ======================================================================
+         6. RENDU DES 4 ONGLETS
+         ====================================================================== */
+      function renderAll() {
+        const year = parseInt(state.config.selectedYear, 10);
+        const model = computeYearModel(year);
+
+        document.getElementById('active-year-indicator').textContent = `Année ${year}`;
+        document.getElementById('select-year-quick').value = String(year);
+        document.getElementById('select-month').value = String(state.config.selectedMonth);
+        document.getElementById('select-day-filter').value = state.config.dayFilter || 'all';
+
+        renderPointagesTab(model);
+        renderPrevisionsTab(model);
+        renderConfigurationTab(model);
+      }
+
+      function renderPointagesTab(model) {
+        const year = parseInt(state.config.selectedYear, 10);
+        const month = parseInt(state.config.selectedMonth, 10);
+        const todayISO = formatDateISO(SYSTEM_TODAY);
+
+        // Sélecteur rapide de congés
+        const qlSelect = document.getElementById('quick-leave-type');
+        const prevQl = qlSelect.value;
+        qlSelect.innerHTML = state.leaveTypes.map(lt =>
+          `<option value="${lt.code}">${lt.icon} ${lt.code} — ${lt.label}</option>`
+        ).join('');
+        if (prevQl) qlSelect.value = prevQl;
+
+        // Prévisualisation des heures sur la journée active
+        document.getElementById('target-date-input').value = activeTargetDate;
+        const targetEntry = state.entries[activeTargetDate] || {};
+        document.getElementById('qp-val-inAM').textContent = `Actuel : ${targetEntry.inAM || '--:--'}`;
+        document.getElementById('qp-val-outAM').textContent = `Actuel : ${targetEntry.outAM || '--:--'}`;
+        document.getElementById('qp-val-inPM').textContent = `Actuel : ${targetEntry.inPM || '--:--'}`;
+        document.getElementById('qp-val-outPM').textContent = `Actuel : ${targetEntry.outPM || '--:--'}`;
+
+        const targetDayObj = model.days.find(d => d.iso === activeTargetDate);
+        document.getElementById('quick-day-calc-preview').textContent = targetDayObj
+          ? `Reprise repas : ${targetDayObj.repriseRepas} | Départ prévu : ${targetDayObj.departPrevu}`
+          : 'Reprise repas : --:-- | Départ prévu : --:--';
+
+        // Carte KPI 1 : Soldes restants
+        const totalHP = Number(state.config.hpDays) + model.autoHP.bonusHP;
+        const soldes = [
+          { code: 'CA',  val: Number(state.config.caDays) - model.takenDays.CA },
+          { code: 'CAA', val: Number(state.config.caaDays) - model.takenDays.CAA },
+          { code: 'RTT', val: Number(state.config.rttDays) - model.takenDays.RTT },
+          { code: 'HP',  val: totalHP - model.takenDays.HP },
+          { code: 'HPA', val: Number(state.config.hpaDays) - model.takenDays.HPA },
+          { code: 'CET', val: Number(state.config.cetDays) - model.takenDays.CET }
+        ];
+        document.getElementById('kpi-hp-bonus-badge').textContent = `Bonus HP auto : +${model.autoHP.bonusHP}j`;
+        document.getElementById('kpi-soldes-grid').innerHTML = soldes.map(s => `
+          <div class="solde-box">
+            <div class="solde-box-code">${s.code}</div>
+            <div class="solde-box-val mono ${s.val < 0 ? 'text-neg' : 'text-pos'}">${s.val} j</div>
+          </div>
+        `).join('');
+
+        // Carte KPI 2 : Cumul annuel
+        const monthDays = model.days.filter(d => d.month === month);
+        const refDay = targetDayObj || monthDays[monthDays.length - 1] || model.days[model.days.length - 1];
+        const cumulEl = document.getElementById('kpi-annual-cumul');
+        const cVal = refDay ? refDay.cumulMin : 0;
+        cumulEl.textContent = formatSignedMinutes(cVal);
+        cumulEl.className = `kpi-value mono ${cVal >= 0 ? 'text-pos' : 'text-neg'}`;
+        document.getElementById('kpi-annual-cumul-detail').textContent =
+          `Inclut Reliquat N-1 (${state.config.reliquatN1}) + Reliquat CA N-1 (${state.config.reliquatCaN1})`;
+
+        // Carte KPI 3 : Vingt-huitaine active
+        const activeP28 = refDay?.p28Info?.period || model.periods28[0];
+        if (activeP28) {
+          document.getElementById('kpi-p28-title').textContent = `Vingt-huitaine Active (P${activeP28.num})`;
+          document.getElementById('kpi-p28-thresholds').textContent =
+            `1/10e: ${formatMinutesHHMM(model.oneTenth)} • 1/5e: ${formatMinutesHHMM(model.oneFifth)}`;
+          const pBal = document.getElementById('kpi-p28-balance');
+          pBal.textContent = formatSignedMinutes(activeP28.netMin);
+          pBal.className = `kpi-value mono ${activeP28.netMin >= 0 ? 'text-pos' : 'text-neg'}`;
+          document.getElementById('kpi-p28-dates').textContent = `Du ${formatDateFR(activeP28.start)} au ${formatDateFR(activeP28.end)}`;
+          document.getElementById('kpi-p28-rule').textContent = activeP28.ruleStatus;
+        }
+
+        // Légende barre d'outils
+        document.getElementById('legend-zone-label').textContent = state.config.vacationZone;
+        document.getElementById('legend-day-ref').textContent = state.config.dayDuration;
+        document.getElementById('legend-half-ref').textContent = state.config.halfDayDuration;
+        document.getElementById('legend-meal-ref').textContent = state.config.mealDuration;
+
+        // Génération du tableau journalier avec récapitulatifs hebdomadaires
+        const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+        const filteredDays = state.config.dayFilter === 'workdays'
+          ? monthDays.filter(d => !d.isWeekend)
+          : monthDays;
+
+        const baseLeaveOpts = `<option value="">-- Travail --</option>` +
+          state.leaveTypes.map(lt => `<option value="${lt.code}">${lt.icon} 1/2 ${lt.code}</option>`).join('') +
+          `<option value="__FULL__">⚡ Journée complète...</option>`;
+
+        let htmlRows = '';
+        let weekWorkedAcc = 0;
+        let weekReliquatAcc = 0;
+
+        filteredDays.forEach((day, idx) => {
+          weekWorkedAcc += day.totalDayMin;
+          weekReliquatAcc += day.reliquatDayMin;
+
+          const rowClasses = ['day-row'];
+          if (day.isWeekend) rowClasses.push('is-weekend');
+          if (day.holidayName) rowClasses.push('is-holiday');
+          if (day.iso === todayISO) rowClasses.push('is-today');
+          if (day.iso === activeTargetDate) rowClasses.push('is-selected');
+          if (day.p28Info && day.p28Info.isLastDay) rowClasses.push('is-j28');
+
+          const calBadges = [];
+          if (day.holidayName) calBadges.push(`<span class="badge badge-holiday">🇫🇷 ${day.holidayName}</span>`);
+          if (day.vacName) calBadges.push(`<span class="badge badge-vac">🎒 ${day.vacName}</span>`);
+          if (day.p28Info) {
+            if (day.p28Info.isLastDay) {
+              calBadges.push(`<span class="badge badge-j28" title="${day.p28Info.period.ruleStatus}">★ Fin P${day.p28Info.num} (J28/28)</span>`);
+            } else {
+              calBadges.push(`<span class="badge badge-p28">P${day.p28Info.num} • J${day.p28Info.dayIdx}/28</span>`);
+            }
+          }
+          if (day.hasRCB) {
+            calBadges.push(`<span class="badge badge-rcb">⚡ RCB (-${formatMinutesHHMM(day.rcbDeductedMin)})</span>`);
+          }
+
+          // Prévision visuelle + bouton de validation rapide
+          let fcCell = '<span style="color:var(--text-muted);">—</span>';
+          if (day.forecasts.length > 0) {
+            fcCell = day.forecasts.map(fc => {
+              const lt = getLeaveType(fc.type);
+              const icon = lt ? lt.icon : '📅';
+              const partLabel = fc.part === 'FULL' ? 'Journée' : (fc.part === 'AM' ? 'Matin' : 'AM');
+              return `<span class="badge badge-fc" title="Prévu : ${fc.type} (${partLabel}) ${fc.comment || ''}">${icon} ${fc.type}</span>
+                      <button type="button" class="btn btn-sm" data-action="apply-fc" data-fc-id="${fc.id}" title="Valider cette prévision en pointage réel" style="padding:1px 5px; font-size:0.68rem;">✓</button>`;
+            }).join(' ');
+          }
+
+          const optAM = baseLeaveOpts.replace(`value="${day.entry.typeAM || ''}"`, `value="${day.entry.typeAM || ''}" selected`);
+          const optPM = baseLeaveOpts.replace(`value="${day.entry.typePM || ''}"`, `value="${day.entry.typePM || ''}" selected`);
+
+          const relClass = day.reliquatDayMin > 0 ? 'text-pos' : (day.reliquatDayMin < 0 ? 'text-neg' : 'text-neutral');
+          const cumClass = day.cumulMin >= 0 ? 'text-pos' : 'text-neg';
+
+          htmlRows += `
+            <tr class="${rowClasses.join(' ')}" data-date="${day.iso}">
+              <td class="sticky-col mono" style="font-weight:700; white-space:nowrap;">
+                ${dayNames[day.dow]} ${String(day.dateObj.getDate()).padStart(2, '0')}/${String(day.month + 1).padStart(2, '0')}
+              </td>
+              <td><div style="display:flex; flex-wrap:wrap; gap:3px;">${calBadges.join('')}</div></td>
+              <td class="text-center" style="white-space:nowrap;">${fcCell}</td>
+              <td class="text-center"><input type="time" class="input input-sm mono" data-date="${day.iso}" data-field="inAM" value="${day.entry.inAM || ''}" /></td>
+              <td class="text-center"><input type="time" class="input input-sm mono" data-date="${day.iso}" data-field="outAM" value="${day.entry.outAM || ''}" /></td>
+              <td class="text-center mono" style="font-weight:600; color:var(--warning-text);">${day.repriseRepas}</td>
+              <td class="text-center"><input type="time" class="input input-sm mono" data-date="${day.iso}" data-field="inPM" value="${day.entry.inPM || ''}" /></td>
+              <td class="text-center"><input type="time" class="input input-sm mono" data-date="${day.iso}" data-field="outPM" value="${day.entry.outPM || ''}" /></td>
+              <td class="text-center mono" style="font-weight:600; color:var(--accent-primary);">${day.departPrevu}</td>
+              <td><select class="select select-sm" data-date="${day.iso}" data-field="typeAM">${optAM}</select></td>
+              <td><select class="select select-sm" data-date="${day.iso}" data-field="typePM">${optPM}</select></td>
+              <td class="text-right mono" style="font-weight:700;">${formatMinutesHHMM(day.totalDayMin)}</td>
+              <td class="text-right mono ${relClass}">${formatSignedMinutes(day.reliquatDayMin)}</td>
+              <td class="text-right mono ${cumClass}">${formatSignedMinutes(day.cumulMin)}</td>
+            </tr>
+          `;
+
+          // Ligne de récapitulatif hebdomadaire à la fin de chaque semaine (Dimanche ou dernier jour affiché du mois)
+          const isLastOfMonth = (idx === filteredDays.length - 1);
+          const nextDay = filteredDays[idx + 1];
+          const isEndOfWeek = (day.dow === 0) || isLastOfMonth || (nextDay && nextDay.isoWeek !== day.isoWeek);
+
+          if (isEndOfWeek) {
+            const wkRelClass = weekReliquatAcc >= 0 ? 'text-pos' : 'text-neg';
+            htmlRows += `
+              <tr class="week-summary-row">
+                <td colspan="11">
+                  📊 Récapitulatif Semaine S${day.isoWeek} (Réf. hebdomadaire : ${state.config.weekDuration})
+                </td>
+                <td class="text-right mono">Total : ${formatMinutesHHMM(weekWorkedAcc)}</td>
+                <td class="text-right mono ${wkRelClass}">Reliquat : ${formatSignedMinutes(weekReliquatAcc)}</td>
+                <td class="text-right mono ${cumClass}">${formatSignedMinutes(day.cumulMin)}</td>
+              </tr>
+            `;
+            weekWorkedAcc = 0;
+            weekReliquatAcc = 0;
+          }
+        });
+
+        document.getElementById('timesheet-tbody').innerHTML = htmlRows;
+
+        // Panneau récapitulatif annuel des vingt-huitaines (P1..P13)
+        document.getElementById('p28-summary-thresholds').textContent =
+          `1/10e = ${formatMinutesHHMM(model.oneTenth)} | 1/5e = ${formatMinutesHHMM(model.oneFifth)}`;
+
+        document.getElementById('p28-annual-tbody').innerHTML = model.periods28.map(p => {
+          const sClass = p.netMin > 0 ? 'text-pos' : (p.netMin < 0 ? 'text-neg' : 'text-neutral');
+          return `
+            <tr>
+              <td style="font-weight:700;">Période P${p.num}</td>
+              <td class="mono">${formatDateFR(p.start)}</td>
+              <td class="mono" style="font-weight:700; color:var(--warning-text);">${formatDateFR(p.end)}</td>
+              <td class="text-right mono ${sClass}">${formatSignedMinutes(p.netMin)}</td>
+              <td class="text-center mono">${p.rcbHalfCount > 0 ? `${p.rcbHalfCount * 0.5} j` : '—'}</td>
+              <td style="font-size:0.75rem;">${p.ruleStatus}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      function renderPrevisionsTab(model) {
+        const year = parseInt(state.config.selectedYear, 10);
+
+        // Sélecteur de type dans le formulaire et le filtre
+        const fcTypeSel = document.getElementById('fc-type');
+        const filterSel = document.getElementById('fc-filter-type');
+        const prevType = fcTypeSel.value;
+        const prevFilter = filterSel.value || 'ALL';
+
+        const leaveChoices = state.leaveTypes.filter(lt => lt.counter !== 'NONE' || lt.code === 'RCB');
+        fcTypeSel.innerHTML = leaveChoices.map(lt =>
+          `<option value="${lt.code}">${lt.icon} ${lt.code} — ${lt.label}</option>`
+        ).join('');
+        if (prevType) fcTypeSel.value = prevType;
+
+        filterSel.innerHTML = `<option value="ALL">Tous les types</option>` +
+          leaveChoices.map(lt => `<option value="${lt.code}">${lt.code}</option>`).join('');
+        filterSel.value = prevFilter;
+
+        // Encart HP Automatique
+        document.getElementById('hp-ca-days-val').textContent = `${model.autoHP.caOutsideDays} j`;
+        document.getElementById('hp-bonus-val').textContent = `Bonus : +${model.autoHP.bonusHP} j HP`;
+        const pct = Math.min(100, (model.autoHP.caOutsideDays / 8) * 100);
+        document.getElementById('hp-progress-fill').style.width = `${pct}%`;
+
+        // Calcul des prévisions non encore converties en pointage réel
+        const yearForecasts = state.forecasts
+          .filter(fc => fc.date.startsWith(`${year}-`))
+          .sort((a, b) => a.date.localeCompare(b.date));
+
+        const plannedCounts = { CA: 0, RTT: 0, HP: 0, CAA: 0, HPA: 0, CET: 0, RCB: 0 };
+        yearForecasts.forEach(fc => {
+          const entry = state.entries[fc.date] || {};
+          const weight = fc.part === 'FULL' ? 1 : 0.5;
+          const alreadyDone = (fc.part === 'AM' && entry.typeAM === fc.type) ||
+                              (fc.part === 'PM' && entry.typePM === fc.type) ||
+                              (fc.part === 'FULL' && entry.typeAM === fc.type && entry.typePM === fc.type);
+          if (!alreadyDone && plannedCounts[fc.type] !== undefined) {
+            plannedCounts[fc.type] += weight;
+          }
+        });
+
+        const compRows = [
+          { code: 'CA',  label: 'Congés Annuels (CA)',            init: Number(state.config.caDays),  bonus: 0 },
+          { code: 'RTT', label: 'RTT',                            init: Number(state.config.rttDays), bonus: 0 },
+          { code: 'HP',  label: 'Hors Période (HP)',              init: Number(state.config.hpDays),  bonus: model.autoHP.bonusHP },
+          { code: 'CAA', label: 'Congés Annuels Antérieurs (CAA)',init: Number(state.config.caaDays), bonus: 0 },
+          { code: 'HPA', label: 'Hors Période Antérieur (HPA)',   init: Number(state.config.hpaDays), bonus: 0 },
+          { code: 'CET', label: 'Compte Épargne Temps (CET)',     init: Number(state.config.cetDays), bonus: 0 }
+        ];
+
+        document.getElementById('forecast-comparison-tbody').innerHTML = compRows.map(r => {
+          const taken = model.takenDays[r.code] || 0;
+          const planned = plannedCounts[r.code] || 0;
+          const remProj = r.init + r.bonus - taken - planned;
+          return `
+            <tr>
+              <td style="font-weight:700;">${r.label}</td>
+              <td class="text-right mono">${r.init} j</td>
+              <td class="text-right mono" style="color:var(--success-text);">${r.bonus > 0 ? `+${r.bonus} j` : '—'}</td>
+              <td class="text-right mono">${taken} j</td>
+              <td class="text-right mono" style="color:var(--accent-primary);">${planned} j</td>
+              <td class="text-right mono ${remProj < 0 ? 'text-neg' : 'text-pos'}">${remProj} j</td>
+            </tr>
+          `;
+        }).join('');
+
+        // Liste interactive des prévisions
+        const filteredFc = prevFilter === 'ALL'
+          ? yearForecasts
+          : yearForecasts.filter(fc => fc.type === prevFilter);
+
+        document.getElementById('badge-forecast-count').textContent = String(yearForecasts.length);
+        document.getElementById('fc-list-count').textContent = String(filteredFc.length);
+
+        const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+        const tbody = document.getElementById('forecast-list-tbody');
+        if (filteredFc.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding:1.25rem; color:var(--text-muted);">Aucune prévision enregistrée pour ${year}.</td></tr>`;
+        } else {
+          tbody.innerHTML = filteredFc.map(fc => {
+            const dObj = parseDateISO(fc.date);
+            const lt = getLeaveType(fc.type);
+            const monthNum = parseInt(fc.date.slice(5, 7), 10);
+            const isHPPeriod = (fc.type === 'CA' && (monthNum < 5 || monthNum > 10));
+            const partTxt = fc.part === 'FULL' ? 'Journée entière' : (fc.part === 'AM' ? 'Matin 1/2' : 'Après-midi 1/2');
+            return `
+              <tr>
+                <td class="mono" style="font-weight:700;">${formatDateFR(fc.date)}</td>
+                <td>${dayNames[dObj.getDay()]}</td>
+                <td><span class="badge badge-fc">${lt ? lt.icon : '📅'} ${fc.type}</span></td>
+                <td>${partTxt}</td>
+                <td class="mono">${fc.part === 'FULL' ? '1,0 j' : '0,5 j'}</td>
+                <td>${isHPPeriod ? '<span class="badge badge-vac">🍂 Hors période</span>' : '—'}</td>
+                <td style="color:var(--text-secondary);">${fc.comment || '—'}</td>
+                <td class="text-right" style="white-space:nowrap;">
+                  <button type="button" class="btn btn-success btn-sm" data-action="apply-fc" data-fc-id="${fc.id}">✓ Valider en pointage</button>
+                  <button type="button" class="btn btn-danger btn-sm" data-action="delete-fc" data-fc-id="${fc.id}">Supprimer</button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+      function renderConfigurationTab(model) {
+        const cfg = state.config;
+        const year = parseInt(cfg.selectedYear, 10);
+
+        document.getElementById('cfg-day-dur').value = cfg.dayDuration;
+        document.getElementById('cfg-halfday-dur').value = cfg.halfDayDuration;
+        document.getElementById('cfg-week-dur').value = cfg.weekDuration;
+        document.getElementById('cfg-meal-dur').value = cfg.mealDuration;
+        document.getElementById('cfg-preview-10').textContent = formatMinutesHHMM(model.oneTenth);
+        document.getElementById('cfg-preview-5').textContent = formatMinutesHHMM(model.oneFifth);
+
+        document.getElementById('cfg-ca-days').value = cfg.caDays;
+        document.getElementById('cfg-rtt-days').value = cfg.rttDays;
+        document.getElementById('cfg-hp-days').value = cfg.hpDays;
+        document.getElementById('cfg-hp-auto-tag').textContent = `+${model.autoHP.bonusHP} auto`;
+        document.getElementById('cfg-caa-days').value = cfg.caaDays;
+        document.getElementById('cfg-hpa-days').value = cfg.hpaDays;
+        document.getElementById('cfg-cet-days').value = cfg.cetDays;
+        document.getElementById('cfg-rel-n1').value = cfg.reliquatN1;
+        document.getElementById('cfg-rel-ca-n1').value = cfg.reliquatCaN1;
+
+        document.getElementById('cfg-year').value = String(year);
+        document.getElementById('cfg-vac-zone').value = cfg.vacationZone;
+        document.getElementById('cfg-vac-year-title').textContent = String(year);
+        document.getElementById('cfg-hol-year-title').textContent = String(year);
+
+        const vacListEl = document.getElementById('cfg-vac-list');
+        if (model.vacRanges.length === 0) {
+          vacListEl.innerHTML = '<span>Aucune zone sélectionnée.</span>';
+        } else {
+          vacListEl.innerHTML = model.vacRanges.map(([s, e, lbl]) =>
+            `<span class="badge badge-vac">${lbl} : ${formatDateFR(s)} → ${formatDateFR(e)}</span>`
+          ).join('');
+        }
+
+        document.getElementById('cfg-hol-list').innerHTML = model.holidays.list.map(h =>
+          `<span class="badge badge-holiday">${formatDateFR(h.date)} (${h.name})</span>`
+        ).join('');
+
+        // Tableau des 13 périodes de 28 jours
+        document.getElementById('cfg-p28-start').value = model.periods28[0]?.start || `${year}-01-05`;
+        document.getElementById('cfg-p28-tbody').innerHTML = model.periods28.map((p, idx) => `
+          <tr>
+            <td style="font-weight:700;">P${p.num}</td>
+            <td><input type="date" class="input input-sm mono" data-p28-idx="${idx}" data-p28-field="start" value="${p.start}" /></td>
+            <td><input type="date" class="input input-sm mono" data-p28-idx="${idx}" data-p28-field="end" value="${p.end}" /></td>
+            <td class="text-right mono">28 j</td>
+            <td class="text-right mono ${p.netMin >= 0 ? 'text-pos' : 'text-neg'}">${formatSignedMinutes(p.netMin)}</td>
+            <td style="font-size:0.74rem;">${p.ruleStatus}</td>
+          </tr>
+        `).join('');
+
+        // Tableau des variables Congés & Événements
+        document.getElementById('cfg-leave-types-tbody').innerHTML = state.leaveTypes.map((lt, idx) => `
+          <tr>
+            <td><input type="text" class="input input-sm mono" style="width:72px; font-weight:700;" data-lt-idx="${idx}" data-lt-field="code" value="${lt.code}" /></td>
+            <td><input type="text" class="input input-sm" style="min-width:170px;" data-lt-idx="${idx}" data-lt-field="label" value="${lt.label}" /></td>
+            <td class="text-center"><input type="text" class="input input-sm text-center" style="width:52px;" data-lt-idx="${idx}" data-lt-field="icon" value="${lt.icon}" /></td>
+            <td class="text-center"><input type="time" class="input input-sm mono" data-lt-idx="${idx}" data-lt-field="halfMin" value="${formatMinutesHHMM(lt.halfMin)}" /></td>
+            <td class="text-center"><input type="time" class="input input-sm mono" data-lt-idx="${idx}" data-lt-field="fullMin" value="${formatMinutesHHMM(lt.fullMin)}" /></td>
+            <td>
+              <select class="select select-sm" data-lt-idx="${idx}" data-lt-field="counter">
+                <option value="CA" ${lt.counter === 'CA' ? 'selected' : ''}>CA</option>
+                <option value="RTT" ${lt.counter === 'RTT' ? 'selected' : ''}>RTT</option>
+                <option value="HP" ${lt.counter === 'HP' ? 'selected' : ''}>HP</option>
+                <option value="CAA" ${lt.counter === 'CAA' ? 'selected' : ''}>CAA</option>
+                <option value="HPA" ${lt.counter === 'HPA' ? 'selected' : ''}>HPA</option>
+                <option value="CET" ${lt.counter === 'CET' ? 'selected' : ''}>CET</option>
+                <option value="RCB" ${lt.counter === 'RCB' ? 'selected' : ''}>RCB (Suivi)</option>
+                <option value="NONE" ${lt.counter === 'NONE' ? 'selected' : ''}>Événement (Aucun solde)</option>
+              </select>
+            </td>
+            <td>
+              <select class="select select-sm" data-lt-idx="${idx}" data-lt-field="mode">
+                <option value="CREDIT_LEAVE" ${lt.mode === 'CREDIT_LEAVE' ? 'selected' : ''}>Crédit congé / événement</option>
+                <option value="DEDUCT_RCB" ${lt.mode === 'DEDUCT_RCB' ? 'selected' : ''}>Déduction cumul (RCB)</option>
+              </select>
+            </td>
+            <td class="text-right">
+              <button type="button" class="btn btn-danger btn-sm" data-action="delete-lt" data-lt-idx="${idx}">Suppr.</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      /* ======================================================================
+         7. GESTIONNAIRES D'ÉVÉNEMENTS & DÉLÉGATION
+         ====================================================================== */
+      function populateYearSelects() {
+        const sQuick = document.getElementById('select-year-quick');
+        const sCfg = document.getElementById('cfg-year');
+        let opts = '';
+        for (let y = 2024; y <= 2040; y++) {
+          opts += `<option value="${y}">${y}</option>`;
+        }
+        sQuick.innerHTML = opts;
+        sCfg.innerHTML = opts;
+      }
+
+      function applyTheme(theme) {
+        const root = document.documentElement;
+        root.setAttribute('data-theme', theme);
+        const icon = document.getElementById('theme-icon');
+        const label = document.getElementById('theme-label');
+        if (theme === 'dark') {
+          icon.textContent = '☀️';
+          label.textContent = 'Thème Clair';
+        } else {
+          icon.textContent = '🌙';
+          label.textContent = 'Thème Sombre';
+        }
+      }
+
+      function showToast(msg, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const div = document.createElement('div');
+        div.className = `toast ${type}`;
+        div.textContent = msg;
+        container.appendChild(div);
+        setTimeout(() => {
+          div.style.opacity = '0';
+          div.style.transition = 'opacity 0.25s ease';
+          setTimeout(() => div.remove(), 260);
+        }, 3200);
+      }
+
+      // Navigation entre les 4 onglets
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetTab = btn.getAttribute('data-tab');
+          document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-selected', 'false');
+          });
+          btn.classList.add('active');
+          btn.setAttribute('aria-selected', 'true');
+
+          document.querySelectorAll('.tab-panel').forEach(panel => {
+            panel.classList.toggle('active', panel.id === `panel-${targetTab}`);
+          });
+        });
+      });
+
+      // Bascule thème clair / sombre
+      function toggleTheme() {
+        state.config.theme = state.config.theme === 'dark' ? 'light' : 'dark';
+        applyTheme(state.config.theme);
+        saveState();
+      }
+      document.getElementById('btn-theme-toggle').addEventListener('click', toggleTheme);
+      document.getElementById('btn-cfg-theme').addEventListener('click', toggleTheme);
+
+      // Horodatage instantané (4 boutons)
+      document.getElementById('quick-punch-buttons').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-punch]');
+        if (!btn) return;
+        const field = btn.getAttribute('data-punch');
+        const now = new Date();
+        const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        if (!state.entries[activeTargetDate]) state.entries[activeTargetDate] = {};
+        state.entries[activeTargetDate][field] = hhmm;
+        if (field.endsWith('AM')) state.entries[activeTargetDate].typeAM = '';
+        if (field.endsWith('PM')) state.entries[activeTargetDate].typePM = '';
+        saveState();
+        renderAll();
+        const labels = { inAM: 'Entrée Matin', outAM: 'Sortie Matin', inPM: 'Entrée Après-midi', outPM: 'Sortie Après-midi' };
+        showToast(`${labels[field]} enregistrée à ${hhmm} (${formatDateFR(activeTargetDate)})`, 'success');
+      });
+
+      // Application rapide d'un congé / événement sur la journée active
+      document.getElementById('btn-apply-quick-leave').addEventListener('click', () => {
+        const code = document.getElementById('quick-leave-type').value;
+        const scope = document.getElementById('quick-leave-scope').value;
+        if (!state.entries[activeTargetDate]) state.entries[activeTargetDate] = {};
+
+        if (scope === 'CLEAR') {
+          state.entries[activeTargetDate].typeAM = '';
+          state.entries[activeTargetDate].typePM = '';
+        } else if (scope === 'FULL') {
+          state.entries[activeTargetDate].typeAM = code;
+          state.entries[activeTargetDate].typePM = code;
+          state.entries[activeTargetDate].inAM = '';
+          state.entries[activeTargetDate].outAM = '';
+          state.entries[activeTargetDate].inPM = '';
+          state.entries[activeTargetDate].outPM = '';
+        } else if (scope === 'AM') {
+          state.entries[activeTargetDate].typeAM = code;
+          state.entries[activeTargetDate].inAM = '';
+          state.entries[activeTargetDate].outAM = '';
+        } else if (scope === 'PM') {
+          state.entries[activeTargetDate].typePM = code;
+          state.entries[activeTargetDate].inPM = '';
+          state.entries[activeTargetDate].outPM = '';
+        }
+        saveState();
+        renderAll();
+        showToast(`Mise à jour effectuée sur le ${formatDateFR(activeTargetDate)}.`, 'success');
+      });
+
+      // Date cible manuelle
+      document.getElementById('target-date-input').addEventListener('change', (e) => {
+        if (!e.target.value) return;
+        activeTargetDate = e.target.value;
+        const d = parseDateISO(activeTargetDate);
+        state.config.selectedYear = Math.min(2040, Math.max(2024, d.getFullYear()));
+        state.config.selectedMonth = d.getMonth();
+        saveState();
+        renderAll();
+      });
+
+      // Navigation mois & année
+      document.getElementById('select-month').addEventListener('change', (e) => {
+        state.config.selectedMonth = parseInt(e.target.value, 10);
+        saveState();
+        renderAll();
+      });
+
+      document.getElementById('select-year-quick').addEventListener('change', (e) => {
+        state.config.selectedYear = parseInt(e.target.value, 10);
+        saveState();
+        renderAll();
+      });
+
+      document.getElementById('select-day-filter').addEventListener('change', (e) => {
+        state.config.dayFilter = e.target.value;
+        saveState();
+        renderAll();
+      });
+
+      document.getElementById('btn-prev-month').addEventListener('click', () => {
+        if (state.config.selectedMonth > 0) {
+          state.config.selectedMonth--;
+        } else if (state.config.selectedYear > 2024) {
+          state.config.selectedYear--;
+          state.config.selectedMonth = 11;
+        }
+        saveState();
+        renderAll();
+      });
+
+      document.getElementById('btn-next-month').addEventListener('click', () => {
+        if (state.config.selectedMonth < 11) {
+          state.config.selectedMonth++;
+        } else if (state.config.selectedYear < 2040) {
+          state.config.selectedYear++;
+          state.config.selectedMonth = 0;
+        }
+        saveState();
+        renderAll();
+      });
+
+      document.getElementById('btn-go-today').addEventListener('click', () => {
+        const now = new Date();
+        activeTargetDate = formatDateISO(now);
+        state.config.selectedYear = Math.min(2040, Math.max(2024, now.getFullYear()));
+        state.config.selectedMonth = now.getMonth();
+        saveState();
+        renderAll();
+      });
+
+      // Délégation sur le tableau journalier (sélection de ligne + édition inputs/selects + validation prévision)
+      const tsTbody = document.getElementById('timesheet-tbody');
+      tsTbody.addEventListener('click', (e) => {
+        const applyBtn = e.target.closest('[data-action="apply-fc"]');
+        if (applyBtn) {
+          e.stopPropagation();
+          applyForecastById(applyBtn.getAttribute('data-fc-id'));
+          return;
+        }
+        if (e.target.closest('input, select, button')) return;
+        const row = e.target.closest('tr.day-row');
+        if (row) {
+          activeTargetDate = row.getAttribute('data-date');
+          renderAll();
+        }
+      });
+
+      tsTbody.addEventListener('change', (e) => {
+        const target = e.target;
+        const iso = target.getAttribute('data-date');
+        const field = target.getAttribute('data-field');
+        if (!iso || !field) return;
+
+        if (!state.entries[iso]) state.entries[iso] = {};
+        const val = target.value;
+
+        if (val === '__FULL__') {
+          const defCode = state.leaveTypes[0]?.code || 'CA';
+          state.entries[iso].typeAM = defCode;
+          state.entries[iso].typePM = defCode;
+          state.entries[iso].inAM = '';
+          state.entries[iso].outAM = '';
+          state.entries[iso].inPM = '';
+          state.entries[iso].outPM = '';
+          showToast(`Journée complète (${defCode}) posée sur le ${formatDateFR(iso)}.`, 'info');
+        } else {
+          state.entries[iso][field] = val;
+          if ((field === 'inAM' || field === 'outAM') && val) state.entries[iso].typeAM = '';
+          if ((field === 'inPM' || field === 'outPM') && val) state.entries[iso].typePM = '';
+          if (field === 'typeAM' && val) { state.entries[iso].inAM = ''; state.entries[iso].outAM = ''; }
+          if (field === 'typePM' && val) { state.entries[iso].inPM = ''; state.entries[iso].outPM = ''; }
+        }
+        saveState();
+        renderAll();
+      });
+
+      // Gestion des Prévisions Congés
+      function applyForecastById(fcId) {
+        const fc = state.forecasts.find(f => f.id === fcId);
+        if (!fc) return;
+        if (!state.entries[fc.date]) state.entries[fc.date] = {};
+        if (fc.part === 'FULL' || fc.part === 'AM') {
+          state.entries[fc.date].typeAM = fc.type;
+          state.entries[fc.date].inAM = '';
+          state.entries[fc.date].outAM = '';
+        }
+        if (fc.part === 'FULL' || fc.part === 'PM') {
+          state.entries[fc.date].typePM = fc.type;
+          state.entries[fc.date].inPM = '';
+          state.entries[fc.date].outPM = '';
+        }
+        saveState();
+        renderAll();
+        showToast(`Prévision ${fc.type} validée sur le pointage du ${formatDateFR(fc.date)}.`, 'success');
+      }
+
+      document.getElementById('forecast-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const type = document.getElementById('fc-type').value;
+        const part = document.getElementById('fc-part').value;
+        const startISO = document.getElementById('fc-start').value;
+        const endISO = document.getElementById('fc-end').value;
+        const comment = document.getElementById('fc-comment').value.trim();
+        const skipNonWorking = document.getElementById('fc-skip-nonworking').checked;
+
+        if (!startISO || !endISO || endISO < startISO) {
+          showToast('Vérifiez les dates de début et de fin.', 'error');
+          return;
+        }
+
+        let count = 0;
+        const sDate = parseDateISO(startISO);
+        const eDate = parseDateISO(endISO);
+
+        for (let d = new Date(sDate); d <= eDate; d = addDays(d, 1)) {
+          const iso = formatDateISO(d);
+          const isWk = (d.getDay() === 0 || d.getDay() === 6);
+          const hols = getFrenchPublicHolidays(d.getFullYear()).map;
+          if (skipNonWorking && (isWk || hols[iso])) continue;
+
+          state.forecasts.push({
+            id: `${iso}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+            date: iso,
+            type,
+            part,
+            comment
+          });
+          count++;
+        }
+
+        saveState();
+        renderAll();
+        showToast(`${count} prévision(s) ajoutée(s) et affichée(s) dans le tableau de pointage.`, 'success');
+      });
+
+      document.getElementById('fc-filter-type').addEventListener('change', () => renderAll());
+
+      document.getElementById('btn-clear-year-forecasts').addEventListener('click', () => {
+        const yStr = `${state.config.selectedYear}-`;
+        state.forecasts = state.forecasts.filter(fc => !fc.date.startsWith(yStr));
+        saveState();
+        renderAll();
+        showToast(`Prévisions de l'année ${state.config.selectedYear} effacées.`, 'info');
+      });
+
+      document.getElementById('forecast-list-tbody').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const action = btn.getAttribute('data-action');
+        const id = btn.getAttribute('data-fc-id');
+        if (action === 'apply-fc') {
+          applyForecastById(id);
+        } else if (action === 'delete-fc') {
+          state.forecasts = state.forecasts.filter(f => f.id !== id);
+          saveState();
+          renderAll();
+          showToast('Prévision supprimée.', 'info');
+        }
+      });
+
+      // Gestion de la Configuration (auto-sauvegarde immédiate à chaque modification)
+      const configInputIds = [
+        'cfg-day-dur', 'cfg-halfday-dur', 'cfg-week-dur', 'cfg-meal-dur',
+        'cfg-ca-days', 'cfg-rtt-days', 'cfg-hp-days', 'cfg-caa-days',
+        'cfg-hpa-days', 'cfg-cet-days', 'cfg-rel-n1', 'cfg-rel-ca-n1',
+        'cfg-year', 'cfg-vac-zone'
+      ];
+
+      configInputIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('change', () => {
+          const cfg = state.config;
+          cfg.dayDuration = document.getElementById('cfg-day-dur').value || '08:06';
+          cfg.halfDayDuration = document.getElementById('cfg-halfday-dur').value || '04:03';
+          cfg.weekDuration = document.getElementById('cfg-week-dur').value.trim() || '40:30';
+          cfg.mealDuration = document.getElementById('cfg-meal-dur').value || '00:45';
+
+          cfg.caDays = parseFloat(document.getElementById('cfg-ca-days').value) || 0;
+          cfg.rttDays = parseFloat(document.getElementById('cfg-rtt-days').value) || 0;
+          cfg.hpDays = parseFloat(document.getElementById('cfg-hp-days').value) || 0;
+          cfg.caaDays = parseFloat(document.getElementById('cfg-caa-days').value) || 0;
+          cfg.hpaDays = parseFloat(document.getElementById('cfg-hpa-days').value) || 0;
+          cfg.cetDays = parseFloat(document.getElementById('cfg-cet-days').value) || 0;
+
+          cfg.reliquatN1 = document.getElementById('cfg-rel-n1').value.trim() || '+00:00';
+          cfg.reliquatCaN1 = document.getElementById('cfg-rel-ca-n1').value.trim() || '+00:00';
+
+          cfg.selectedYear = parseInt(document.getElementById('cfg-year').value, 10);
+          cfg.vacationZone = document.getElementById('cfg-vac-zone').value;
+
+          saveState();
+          renderAll();
+          showToast('Configuration mise à jour et sauvegardée.', 'success');
+        });
+      });
+
+      // Périodes de 28 jours éditables
+      document.getElementById('btn-regen-p28').addEventListener('click', () => {
+        const year = parseInt(state.config.selectedYear, 10);
+        const startISO = document.getElementById('cfg-p28-start').value || `${year}-01-05`;
+        state.config.p28StartDate = startISO;
+        state.config.periods28ByYear[year] = generateDefaultPeriods28(year, startISO);
+        saveState();
+        renderAll();
+        showToast('Cycles de 28 jours recalculés pour toute l’année.', 'success');
+      });
+
+      document.getElementById('cfg-p28-tbody').addEventListener('change', (e) => {
+        const idx = parseInt(e.target.getAttribute('data-p28-idx'), 10);
+        const field = e.target.getAttribute('data-p28-field');
+        if (isNaN(idx) || !field) return;
+        const year = parseInt(state.config.selectedYear, 10);
+        const periods = getYearPeriods28(year);
+        if (periods[idx]) {
+          periods[idx][field] = e.target.value;
+          saveState();
+          renderAll();
+        }
+      });
+
+      // Variables Congés & Événements éditables
+      document.getElementById('btn-add-leave-type').addEventListener('click', () => {
+        const suffix = state.leaveTypes.length + 1;
+        state.leaveTypes.push({
+          code: `EV${suffix}`,
+          label: `Nouvel événement ${suffix}`,
+          icon: '📌',
+          halfMin: parseTimeToMinutes(state.config.halfDayDuration) ?? 243,
+          fullMin: parseTimeToMinutes(state.config.dayDuration) ?? 486,
+          counter: 'NONE',
+          mode: 'CREDIT_LEAVE'
+        });
+        saveState();
+        renderAll();
+        showToast('Nouvelle variable ajoutée — modifiez son code et son libellé dans le tableau.', 'success');
+      });
+
+      const ltTbody = document.getElementById('cfg-leave-types-tbody');
+      ltTbody.addEventListener('change', (e) => {
+        const idx = parseInt(e.target.getAttribute('data-lt-idx'), 10);
+        const field = e.target.getAttribute('data-lt-field');
+        if (isNaN(idx) || !field || !state.leaveTypes[idx]) return;
+
+        let val = e.target.value;
+        if (field === 'code') val = val.trim().toUpperCase();
+        if (field === 'halfMin' || field === 'fullMin') {
+          val = parseTimeToMinutes(val) ?? 243;
+        }
+        state.leaveTypes[idx][field] = val;
+        saveState();
+        renderAll();
+      });
+
+      ltTbody.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action="delete-lt"]');
+        if (!btn) return;
+        const idx = parseInt(btn.getAttribute('data-lt-idx'), 10);
+        if (state.leaveTypes.length <= 1) {
+          showToast('Impossible de supprimer le dernier type.', 'error');
+          return;
+        }
+        state.leaveTypes.splice(idx, 1);
+        saveState();
+        renderAll();
+        showToast('Variable supprimée.', 'info');
+      });
+
+      // Export / Import JSON / Synchronisation Grist / Réinitialisation
+      document.getElementById('btn-export-json').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `chronogrist_${state.config.selectedYear}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Fichier JSON exporté.', 'success');
+      });
+
+      document.getElementById('input-import-json').addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const imported = JSON.parse(ev.target.result);
+            if (imported && imported.config) {
+              state.config = { ...DEFAULT_CONFIG, ...imported.config };
+              state.leaveTypes = imported.leaveTypes || JSON.parse(JSON.stringify(DEFAULT_LEAVE_TYPES));
+              state.entries = imported.entries || {};
+              state.forecasts = imported.forecasts || [];
+              saveState();
+              applyTheme(state.config.theme);
+              renderAll();
+              showToast('Données importées avec succès !', 'success');
+            }
+          } catch (err) {
+            showToast('Fichier JSON invalide.', 'error');
+          }
+        };
+        reader.readAsText(file);
+      });
+
+      document.getElementById('btn-grist-sync-header').addEventListener('click', syncOrCreateGristTables);
+      document.getElementById('btn-grist-sync-cfg').addEventListener('click', syncOrCreateGristTables);
+
+      document.getElementById('btn-reset-data').addEventListener('click', (e) => {
+        const btn = e.currentTarget;
+        if (!resetConfirmArm) {
+          resetConfirmArm = true;
+          btn.textContent = '⚠️ Cliquez à nouveau pour confirmer la réinitialisation';
+          setTimeout(() => {
+            resetConfirmArm = false;
+            btn.textContent = '⚠️ Réinitialiser les données';
+          }, 4000);
+        } else {
+          resetConfirmArm = false;
+          btn.textContent = '⚠️ Réinitialiser les données';
+          localStorage.removeItem(STORAGE_KEY);
+          state = {
+            config: { ...DEFAULT_CONFIG },
+            leaveTypes: JSON.parse(JSON.stringify(DEFAULT_LEAVE_TYPES)),
+            entries: {},
+            forecasts: []
+          };
+          saveState();
+          applyTheme(state.config.theme);
+          renderAll();
+          showToast('Toutes les données ont été réinitialisées.', 'info');
+        }
+      });
+
+      /* ======================================================================
+         8. LOGIQUE DU TIMER CONFIGURABLE & WEB AUDIO API
+         ====================================================================== */
+      function renderTimerDisplay() {
+        const h = Math.floor(timerRemSec / 3600);
+        const m = Math.floor((timerRemSec % 3600) / 60);
+        const s = timerRemSec % 60;
+        const str = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        document.getElementById('timer-display').textContent = str;
+
+        const miniBadge = document.getElementById('badge-timer-mini');
+        if (timerInterval) {
+          miniBadge.style.display = 'inline-block';
+          miniBadge.textContent = h > 0 ? str : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        } else {
+          miniBadge.style.display = 'none';
+        }
+
+        const circ = 326.7256;
+        const ratio = timerTotalSec > 0 ? (timerRemSec / timerTotalSec) : 0;
+        document.getElementById('timer-ring-fg').style.strokeDashoffset = String(circ * (1 - ratio));
+      }
+
+      function syncTimerInputs() {
+        const h = Math.max(0, parseInt(document.getElementById('timer-h').value, 10) || 0);
+        const m = Math.max(0, Math.min(59, parseInt(document.getElementById('timer-m').value, 10) || 0));
+        const s = Math.max(0, Math.min(59, parseInt(document.getElementById('timer-s').value, 10) || 0));
+        timerTotalSec = h * 3600 + m * 60 + s;
+        timerRemSec = timerTotalSec;
+        renderTimerDisplay();
+      }
+
+      function playCompletionChime() {
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          const ctx = new AudioCtx();
+          [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.14, ctx.currentTime + idx * 0.16);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.16 + 0.45);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + idx * 0.16);
+            osc.stop(ctx.currentTime + idx * 0.16 + 0.46);
+          });
+        } catch (e) { /* Ignorer si audio bloqué */ }
+      }
+
+      function pauseTimer() {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+          document.getElementById('timer-status-label').textContent = 'EN PAUSE';
+          renderTimerDisplay();
+        }
+      }
+
+      document.getElementById('btn-timer-start').addEventListener('click', () => {
+        if (timerInterval) return;
+        document.getElementById('timer-alert-banner').style.display = 'none';
+        if (timerRemSec <= 0) syncTimerInputs();
+        if (timerRemSec <= 0) return;
+
+        document.getElementById('timer-status-label').textContent = 'EN COURS';
+        timerInterval = setInterval(() => {
+          if (timerRemSec > 0) {
+            timerRemSec--;
+            renderTimerDisplay();
+          } else {
+            pauseTimer();
+            document.getElementById('timer-status-label').textContent = 'TERMINÉ';
+            document.getElementById('timer-alert-banner').style.display = 'block';
+            playCompletionChime();
+            showToast('⏰ Temps écoulé ! Le compte à rebours est terminé.', 'success');
+          }
+        }, 1000);
+        renderTimerDisplay();
+      });
+
+      document.getElementById('btn-timer-pause').addEventListener('click', pauseTimer);
+
+      document.getElementById('btn-timer-reset').addEventListener('click', () => {
+        pauseTimer();
+        document.getElementById('timer-alert-banner').style.display = 'none';
+        syncTimerInputs();
+        document.getElementById('timer-status-label').textContent = 'PRÊT';
+      });
+
+      ['timer-h', 'timer-m', 'timer-s'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => {
+          if (!timerInterval) syncTimerInputs();
+        });
+      });
+
+      document.getElementById('timer-presets').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-preset]');
+        if (!btn) return;
+        pauseTimer();
+        document.getElementById('timer-alert-banner').style.display = 'none';
+        const p = btn.getAttribute('data-preset');
+        let h = 0, m = 45, s = 0;
+        if (p === 'meal') {
+          const mealMin = parseTimeToMinutes(state.config.mealDuration) ?? 45;
+          h = Math.floor(mealMin / 60);
+          m = mealMin % 60;
+        } else if (p === 'halfday') {
+          const hdMin = parseTimeToMinutes(state.config.halfDayDuration) ?? 243;
+          h = Math.floor(hdMin / 60);
+          m = hdMin % 60;
+        } else {
+          [h, m, s] = p.split(',').map(Number);
+        }
+        document.getElementById('timer-h').value = String(h);
+        document.getElementById('timer-m').value = String(m);
+        document.getElementById('timer-s').value = String(s);
+        syncTimerInputs();
+        document.getElementById('timer-status-label').textContent = 'PRÊT';
+      });
+
+      /* ======================================================================
+         9. HORLOGE TEMPS RÉEL & INITIALISATION GLOBALE
+         ====================================================================== */
+      function tickLiveClock() {
+        const now = new Date();
+        document.getElementById('live-clock-time').textContent = now.toLocaleTimeString('fr-FR');
+        document.getElementById('live-clock-date').textContent = now.toLocaleDateString('fr-FR', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+        document.getElementById('live-iso-week').textContent = `Semaine S${getISOWeek(now)}`;
+
+        const isoNow = formatDateISO(now);
+        const periods = getYearPeriods28(now.getFullYear());
+        let pBadgeTxt = 'Hors vingt-huitaine';
+        for (const p of periods) {
+          if (isoNow >= p.start && isoNow <= p.end) {
+            const jIdx = Math.round((parseDateISO(isoNow) - parseDateISO(p.start)) / 86400000) + 1;
+            pBadgeTxt = `P${p.num} • Jour ${jIdx}/28`;
+            break;
+          }
+        }
+        document.getElementById('live-p28-badge').textContent = pBadgeTxt;
+      }
+
+      // Démarrage ordonné et garanti
+      loadState();
+      populateYearSelects();
+      applyTheme(state.config.theme);
+
+      const defaultTodayISO = formatDateISO(SYSTEM_TODAY);
+      document.getElementById('fc-start').value = defaultTodayISO;
+      document.getElementById('fc-end').value = defaultTodayISO;
+
+      tickLiveClock();
+      setInterval(tickLiveClock, 1000);
+      syncTimerInputs();
+      renderAll();
+      initGristSafely();
+    });
+  </script>
+</body>
+</html>
